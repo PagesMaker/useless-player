@@ -35,7 +35,7 @@ export default {
       height: $avai;
     }
     .right-content{
-      background: $white;
+      background: white;
       width: 88%;
       height: $avai;
     }

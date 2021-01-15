@@ -11,11 +11,9 @@ export default {
 </script>
 
 <style lang="scss">
-  $white: #F6F6F6;
   * {
     padding: 0;
     list-style: none;
-    background-color: $white;
   }
   #app{
     width: 100%;
