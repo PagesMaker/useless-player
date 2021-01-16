@@ -5,6 +5,7 @@ import Antd from 'ant-design-vue';
 import App from './App';
 import mainContent from './components/main-content';
 import login from "./components/login";
+import 'font-awesome/css/font-awesome.css';
 import moment from "moment";
 Vue.use(Antd);
 

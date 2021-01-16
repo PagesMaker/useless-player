@@ -3,17 +3,22 @@
     <div class="process-bar"></div>
     <div class="song-area">
       <div class="song-info">
-        <img :src="songInfo.songImg" alt="">
-        <div class="song-area">
-          <div class="song-name">
-            <span>{{songInfo.songName}}</span>
+        <div v-if="songInfo.songImg !== ''" class="song-image">
+          <img :src="songInfo.songImg" alt="">
+        </div>
+        <div class="song-image blue-bg" style="opacity: 0.7" v-else>
+          <a-icon type="customer-service" />
+        </div>
+        <div class="song-name-area">
+          <div class="song-name-content">
+            <span class="song-name">{{songInfo.songName}}</span>
             <span>&nbsp;-&nbsp;</span>
             <span v-for="(auth, index) in songInfo.songAuthor" @click="jumpToAuthorPage(auth)">
             <span>{{auth}}</span><span v-if="index !== songInfo.songAuthor.length - 1">&nbsp;/&nbsp;</span>
           </span>
           </div>
           <div class="function-area">
-            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style.color="songInfo.isLike ? 'red' : 'black'" />
+            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />
             <a-icon type="download" title="下载"/>
             <a-icon type="delete" title="从播放列表删除" />
             <a-icon type="message" title="评论" />
@@ -31,15 +36,19 @@
         <a-icon v-if="!musicControl.isPlaying" type="play-circle" title="播放" theme="filled" />
         <a-icon v-if="musicControl.isPlaying" type="pause-circle" title="暂停" theme="filled" />
         <a-icon type="step-forward" title="下一首"/>
-        <a-icon type="sound"  title="sound"/>
+        <a-icon type="sound"  title="音量"/>
         <div class="adjust-sound" v-if="musicControl.openSoundAdjustPanel"></div>
       </div>
       <div class="right-control-area">
         <div class="time-area">
-          <span>{{currentTime | timeFormat('mm:ss')}}</span>
+          <span>{{currentTime | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
+        </div>
+        <div class="list-area">
+          <a-icon type="menu" title=""/>
         </div>
       </div>
     </div>
+    <audio :src="songInfo.song"></audio>
   </div>
 </template>
 
@@ -57,13 +66,15 @@
           openSoundAdjustPanel: false
         },
         songInfo: {
+          song: '',
           songImg: '',
           songName: 'music',
           songAuthor: ['11', '222', '33'],
           isLike: false,
           isLikeHover: false,
           totalTime: ''
-        }
+        },
+        songList: []
       }
     },
     methods:{
@@ -74,10 +85,96 @@
 
       }
     },
-    computed:{}
+    computed:{
+      getSongTime() {
+        return !this.songInfo.totalTime ? '00:00' : this.songInfo.totalTime
+      }
+    }
   }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
+  .footer-player-content-box{
+    width: $max;
+    /deep/ .anticon {
+      font-size: 1.2em;
+    }
+    .process-bar{
+      width: $max;
+      height: 2px;
+      background-color: $gray;
+    }
+    .song-area{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 5px 20px;
+      width: $max;
+      >div{
+        width: $p33;
+        height: $max;
+        display: flex;
+      }
+      .song-info{
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        .song-name-area{
+          margin: 0 10px;
+          /deep/ .anticon:not(:first-child) {
+            padding: 0 3px;
+          }
+          .song-name-content{
+            .song-name{
+              color: black;
+              font-size: 16px;
+              font-weight: 500;
+            }
+          }
+        }
+        .song-image{
+          width: 40px;
+          color: #E3E3E3;
+          height: 40px;
+          border-radius: 5px;
+          font-size: 2em;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          img{
+            width: $max;
+            height: $max;
+          }
+        }
+      }
+      .center-control-area{
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        /deep/ .anticon.anticon-step-backward, .anticon.anticon-step-forward {
+          font-size: 2em;
+          margin: 0 10px;
+        }
+        /deep/ .anticon.anticon-play-circle{
+          font-size: 3em;
+          color: $blue;
+          opacity: 0.7;
+        }
+      }
+      .right-control-area{
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        .list-area{
+          margin-left: 10px;
+          /deep/ .anticon {
+            line-height: unset!important;
+          }
+        }
+      }
+    }
+  }
 </style>
