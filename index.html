@@ -9,4 +9,12 @@
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>
+  <script>
+    window.onload = function () {
+      document.getElementsByTagName('html')[0].style.fontSize = (window.innerWidth / 12).toFixed(0) + 'px';
+    }
+    window.onresize = function () {
+      document.getElementsByTagName('html')[0].style.fontSize = (window.innerWidth / 12).toFixed(0) + 'px';
+    }
+  </script>
 </html>

@@ -16,6 +16,7 @@ export default {
     list-style: none;
   }
   #app{
+    font-size: unset;
     width: 100%;
     height: 100%
   }
@@ -25,4 +26,12 @@ export default {
   .anticon{
     cursor: pointer;
   }
+  .router-content{
+    height: 100%;
+    width: 100%;
+    padding: 30px;
+  }
+
+
+
 </style>

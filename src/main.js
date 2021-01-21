@@ -1,4 +1,4 @@
-import router from './router'
+import router from './router';
 import Vue from 'vue';
 import 'ant-design-vue/dist/antd.css';
 import Antd from 'ant-design-vue';
@@ -6,9 +6,13 @@ import App from './App';
 import mainContent from './components/main-content';
 import login from "./components/login";
 import 'font-awesome/css/font-awesome.css';
+import VueRx from 'vue-rx';
+import Rx from 'rxjs/Rx'
 import moment from "moment";
-Vue.use(Antd);
+import axios from 'axios';
+import VueAxios from 'vue-axios';
 
+Vue.use(Antd, VueRx, Rx, VueAxios, axios);
 Vue.config.productionTip = false;
 Vue.filter('timeFormat', function (value, format = '') {
   console.log(value,format);

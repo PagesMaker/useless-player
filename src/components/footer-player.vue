@@ -48,7 +48,7 @@
         </div>
       </div>
     </div>
-    <audio :src="songInfo.song"></audio>
+    <audio :src="songInfo.song" ></audio>
   </div>
 </template>
 
@@ -161,7 +161,6 @@
         /deep/ .anticon.anticon-play-circle{
           font-size: 3em;
           color: $blue;
-          opacity: 0.7;
         }
       }
       .right-control-area{

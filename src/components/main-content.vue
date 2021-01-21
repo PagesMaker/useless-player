@@ -21,23 +21,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  $white: #F6F6F6;
-  $avai: 100%;
   .main-content{
-    width: $avai;
-    height: $avai;
+    width: $max;
+    height: $max;
     display: flex;
     flex-direction: row;
     background: $white;
     .left-menu{
       background: #E3E3E3;
       width: 12%;
-      height: $avai;
+      height: $max;
     }
     .right-content{
       background: white;
       width: 88%;
-      height: $avai;
+      height: $max;
     }
   }
 </style>
