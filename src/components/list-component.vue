@@ -50,9 +50,9 @@
           </div>
         </div>
         <div class="music-list-body">
-          <a-tabs default-active-key="1" @change="callback">
+          <a-tabs default-active-key="1" @change="tabChanged(e)">
             <a-tab-pane key="1" :tab="'歌曲 ' + (listInfo.songs ? listInfo.songs.length : 0)">
-
+              <a-table class="song-listing" size="small"  :columns="columns" :data-source="listInfo.songs"></a-table>
             </a-tab-pane>
             <a-tab-pane key="2" tab="最近收藏">
               暂无收藏
@@ -67,6 +67,16 @@
 </template>
 
 <script>
+  const renderContent = (value, row, index) => {
+    const obj = {
+      children: value,
+      attrs: {},
+    };
+    if (index === 0 || index === 2) {
+      obj.attrs.colSpan = 0;
+    }
+    return obj;
+  };
     export default {
       name: "list-component",
       data () {
@@ -75,7 +85,36 @@
           searchText: '',
           isEditMode: false,
           userInfo: {},
-          listInfo: {}
+          listInfo: {},
+          columns: [
+            {
+              title: 'heart',
+              colSpan: 0,
+              dataIndex: 'heart',
+              customRender: renderContent
+            },
+            {
+              title: '歌曲',
+              dataIndex: 'songs',
+              width: 360,
+            },
+            {
+              title: 'edit',
+              colSpan: 0,
+              dataIndex: 'edit',
+              customRender: renderContent
+            },
+            {
+              title: '歌手',
+              dataIndex: 'singer',
+              width: 240
+            },
+            {
+              title: '专辑',
+              dataIndex: 'album',
+              width: 240
+            }
+          ]
         }
       },
       mounted() {
@@ -89,6 +128,7 @@
             songs: []
           }
         },
+        tabChanged(e) {},
         toggleSearch(e) {
           this.searchMode = e;
           this.searchText = '';
@@ -169,11 +209,22 @@
           }
           /deep/ .ant-btn:first-child:hover{
             background-color: $deepBlue;
+            color: $white;
           }
           /deep/ .ant-btn:hover{
             color: unset;
             background-color: #aaaaaa;
           }
+        }
+      }
+    }
+    .music-list-body{
+      /deep/ .ant-tabs-bar{
+        border: none;
+      }
+      .music-list{
+        /deep/ .ant-table-small{
+          border: none;
         }
       }
     }
