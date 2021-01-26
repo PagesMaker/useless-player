@@ -12,7 +12,9 @@ import moment from "moment";
 import axios from 'axios';
 import VueAxios from 'vue-axios';
 
-Vue.use(Antd, VueRx, Rx, VueAxios, axios);
+Vue.use(Antd);
+Vue.use(VueRx, Rx);
+Vue.use(VueAxios, axios);
 Vue.config.productionTip = false;
 Vue.filter('timeFormat', function (value, format = '') {
   console.log(value,format);

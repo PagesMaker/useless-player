@@ -222,11 +222,9 @@
       /deep/ .ant-tabs-bar{
         border: none;
       }
-      .music-list{
         /deep/ .ant-table-small{
           border: none;
         }
-      }
     }
   }
 </style>
