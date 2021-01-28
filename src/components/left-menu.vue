@@ -69,6 +69,7 @@
 
 <style lang="scss" scoped>
   .left-menu-content{
+    background-color: #F6F6F6;
      /deep/ .ant-menu.ant-menu-inline{
       background: #F6F6F6;
     }
