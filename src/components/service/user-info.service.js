@@ -1,5 +1,5 @@
 class UserInfoService{
-  userInfo = {userName : '111'};
+  userInfo = {userName : ''};
   isLogin = false;
   cookie = '';
 }

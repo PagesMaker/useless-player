@@ -5,14 +5,13 @@
         <a-icon slot="prefix" type="search" />
       </a-input>
       <div class="user-infos">
-        <div v-if="userInfos.isLogin"  class="user-header">
-          <img :src="userInfos.headerImg" alt="">
+        <div v-if="userInfo.isLogin" class="user-infos-box">
+          <img class="user-avatar" :src="userInfo.userInfo.avatarUrl" alt="">
+          <span>{{userInfo.isLogin ? userInfo.userInfo.nickname : '请登录'}}</span>
         </div>
-        <div v-else class="user-header" @click="!userInfos.isLogin ? openLoginWindow() : gotoUserPage()">
+        <div v-else class="user-header" @click="!userInfo.isLogin ? openLoginWindow() : gotoUserPage()">
           <a-icon type="user" />
-        </div>
-        <div class="user-name">
-          <span>{{userInfos.isLogin ? userInfos.userName : '请登录'}}</span>
+          <span>请登录</span>
         </div>
       </div>
     </div>
@@ -52,6 +51,8 @@
 <script>
   import {UserInfos} from './service/user-info.service';
   import {SERVER} from "../main";
+  import {bully} from "./service/bully";
+  import {SYSTEM_EVENTS} from "../Const";
   export default {
     name: 'header-content',
     data() {
@@ -60,16 +61,20 @@
         qrKey: '',
         searchMusic: '',
         account: Object,
-        userInfos: UserInfos.userInfo,
+        userInfo: UserInfos,
         visible: false,
         loginProcess: 'loginHome', // 可能的值有 'loginHome', 'loginByQR', 'register'
         loading: false
       }
     },
     mounted() {
-      if (document.cookie.includes('__csrf')) {
-        this.getLoginStatus();
-      }
+      setTimeout(() => {
+        if (document.cookie.includes('__csrf')) {
+          UserInfos.cookie = document.cookie + '; HTTPOnly';
+          UserInfos.isLogin = true;
+          this.getLoginStatus();
+        }
+      }, 500)
     },
     methods: {
       handleOk(e) {
@@ -120,7 +125,11 @@
               // 扫码成功
               UserInfos.isLogin = true;
               UserInfos.cookie = res.data.cookie;
-              document.cookie = res.data.cookie; // 需要将cookie保存并且设置到浏览器
+              res.data.cookie.split(';;').forEach(item => {
+                item = item.split('HTTPOnly')[0];
+                document.cookie = item;
+              })
+              // 需要将cookie保存并且设置到浏览器
               this.getLoginStatus();
               this.handleCancel();
             }
@@ -133,11 +142,16 @@
           if (res.data.code === 200) {
             this.account = res.data.account;
             UserInfos.userInfo = res.data.profile;
+            this.userInfo = UserInfos;
             this.axios.post( SERVER + `/user/detail?uid=${res.data.account.id}`,  {cookie: UserInfos.cookie}).then(res => {
               console.log(res);
               if (res.data.code === 200) {
                 console.log(res);
               }
+            });
+            bully.setMessage({
+              type: SYSTEM_EVENTS.GET_USER_ID,
+              data: res.data.account
             });
           }
         });
@@ -187,7 +201,7 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      .user-name{
+      >span{
         margin-left: 10px;
       }
       .user-header{
@@ -211,6 +225,25 @@
         width: 210px;
         height: 30px;
       }
+    }
+  }
+  .user-infos-box{
+    color: $black;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    .user-avatar{
+      width: 30px;
+      height: 30px;
+      border-radius: 30px;
+    }
+    .user-avatar + span{
+      margin-left: 10px;
+    }
+    .user-avatar + span:hover{
+      color: $blue;
+      cursor: pointer;
     }
   }
 </style>

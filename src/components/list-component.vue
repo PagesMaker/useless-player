@@ -2,19 +2,19 @@
     <div class="router-content">
       <div class="music-list">
         <div class="music-list-header">
-          <div v-if="listInfo.listImageSrc" class="music-list-img-box">
-            <img :src="listInfo.listImageSrc" alt="">
+          <div v-if="crtListInfo.coverImgUrl" class="music-list-img-box">
+            <img class="music-list-img" :src="crtListInfo.coverImgUrl" alt="">
           </div>
-          <div v-else class="music-list-img-box">
+          <div v-else class="music-list-img-box-empty">
             <i class="fa fa-music"></i>
           </div>
           <div class="list-infos-box">
             <div class="list-name">
-              {{listInfo.listName}}
+              {{crtListInfo.name}}
             </div>
             <div :style="{'display': userInfo ? 'block' : 'none'}" class="user-infos-box">
-              <img :src="userInfo.imgSrc" alt="">
-              <span>{{userInfo.name}}</span>
+              <img class="user-avatar" :src="userInfo.avatarUrl" alt="">
+              <span>{{userInfo.nickname}}</span>
             </div>
             <div class="user-infos-box">
               <span>精心完善歌单信息有机会获得推荐，让更多用户看到你的大作</span>
@@ -51,8 +51,26 @@
         </div>
         <div class="music-list-body">
           <a-tabs default-active-key="1" @change="tabChanged(e)">
-            <a-tab-pane key="1" :tab="'歌曲 ' + (listInfo.songs ? listInfo.songs.length : 0)">
-              <a-table class="song-listing" size="small"  :columns="columns" :data-source="listInfo.songs"></a-table>
+            <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
+              <a-table :pagination="false" class="song-listing" size="small"  :columns="columns" :data-source="songs">
+                <div slot="name" slot-scope="text" class="row-of-song-name">
+                  <span slot="heart" class="blue-hover heart-icon" > <a-icon class="favourite-songs" type="heart"></a-icon></span>
+                  <span class="song-name">{{ text }}</span>
+                  <span class="edit-area blue-hover">
+                    <a-icon type="download" title="下载"/>
+                    <a-icon type="delete" title="从播放列表删除" />
+                    <a-icon type="message" title="评论" />
+                    <a-icon type="share-alt" title="分享" v-if="false" /><!-- todo -->
+                    <a-icon type="plus-square" title="添加到" />
+                  </span>
+                </div>
+                <span slot="singer" slot-scope="ar">
+                   <span v-for="(auth, index) in ar" @click="jumpToAuthorPage(auth)">
+                        <span class="blue-hover">{{auth.name}}</span><span v-if="index !== ar.length - 1">&nbsp;/&nbsp;</span>
+                   </span>
+                </span>
+                <span slot="album" class="blue-hover" slot-scope="al">{{ al.name }}</span>
+              </a-table>
             </a-tab-pane>
             <a-tab-pane key="2" tab="最近收藏">
               暂无收藏
@@ -67,6 +85,11 @@
 </template>
 
 <script>
+  import {bully} from "./service/bully";
+  import {SYSTEM_EVENTS} from "../Const";
+  import {SERVER} from "../main";
+  import {UserInfos} from "./service/user-info.service";
+
   const renderContent = (value, row, index) => {
     const obj = {
       children: value,
@@ -81,57 +104,108 @@
       name: "list-component",
       data () {
         return {
+          subscription: [],
           searchMode: false,
           searchText: '',
           isEditMode: false,
+          crtListInfo: {},
+          crtListInfoIdx: 0,
+          songs: [],
           userInfo: {},
           listInfo: {},
           columns: [
             {
-              title: 'heart',
-              colSpan: 0,
-              dataIndex: 'heart',
-              customRender: renderContent
-            },
-            {
               title: '歌曲',
-              dataIndex: 'songs',
+              dataIndex: 'name',
               width: 360,
-            },
-            {
-              title: 'edit',
-              colSpan: 0,
-              dataIndex: 'edit',
-              customRender: renderContent
+              ellipsis: true,
+              scopedSlots: { customRender: 'name' }
             },
             {
               title: '歌手',
-              dataIndex: 'singer',
-              width: 240
+              dataIndex: 'ar',
+              width: 240,
+              scopedSlots: { customRender: 'singer' }
             },
             {
               title: '专辑',
-              dataIndex: 'album',
-              width: 240
+              dataIndex: 'al',
+              width: 240,
+              scopedSlots: { customRender: 'album' }
             }
           ]
         }
       },
       mounted() {
-        this.initListInfo();
+        this.initCrtListInfo();
+        const sub =  bully.getMessage().subscribe(res => {
+          console.log(res, 1111);
+          if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
+            this.getListInfo(res.data);
+            console.log(UserInfos);
+            this.userInfo = UserInfos.userInfo;
+          }
+        })
+        this.subscription.push(sub);
+      },
+      destroyed() {
+        for (const ite of this.subscription) {
+          if (ite) {
+            ite.unsubscribe();
+          }
+        }
+        this.subscription = null;
       },
       methods: {
-        initListInfo() {
-          this.listInfo = {
-            listName: '新建歌单',
-            listImageSrc: '',
-            songs: []
+        getListInfo(data) {
+          this.axios.post(SERVER + `/user/playlist`, {
+            cookie: UserInfos.cookie,
+            uid: data.id
+          }).then(res => {
+            console.log(res);
+            if (res.data.code === 200) {
+              this.listInfo = res.data.playlist;
+              this.setCrtList(0);
+              this.getListDetail();
+            }
+          }, err => {
+            console.log(err);
+          })
+        },
+        getListDetail() {
+          this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
+            console.log(res);
+            res.data.playlist.tracks.forEach(item => {
+              item.musicSrc = this.getMusic(item.id);
+            });
+            this.songs = res.data.playlist.tracks;
+          }, err => {
+            console.log(err);
+          })
+        },
+        setCrtList(i) {
+          if (this.listInfo[i]) {
+            this.crtListInfo = this.listInfo[i];
+            this.crtListInfoIdx = i;
+          } else {
+            this.initCrtListInfo();
+          }
+        },
+        initCrtListInfo() {
+          this.crtListInfo = {
+            name: '新建歌单',
+            coverImgUrl: ''
           }
         },
         tabChanged(e) {},
         toggleSearch(e) {
           this.searchMode = e;
           this.searchText = '';
+        },
+        getMusic(musicId) {
+          return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
+        },
+        jumpToAuthorPage(auth) {
         }
       }
     }
@@ -142,6 +216,9 @@
     width: $max;
     height: $max;
     overflow: auto;
+    /deep/ .anticon {
+      font-size: 1.2em;
+    }
     .music-list-header{
       height: 165px;
       width: $max;
@@ -150,6 +227,17 @@
       align-items: center;
       justify-content: flex-start;
       .music-list-img-box{
+        width: 165px;
+        height: $max;
+        border-radius: 20px;
+        display: flex;
+        >img.music-list-img{
+          width: inherit;
+          height: inherit;
+          border-radius: inherit;
+        }
+      }
+      .music-list-img-box-empty{
         width: 165px;
         height: $max;
         border-radius: 20px;
@@ -173,7 +261,23 @@
           font-weight: bold;
         }
         .user-infos-box{
-
+          color: $black;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-start;
+          align-items: center;
+          .user-avatar{
+            width: 30px;
+            height: 30px;
+            border-radius: 30px;
+          }
+          .user-avatar + span{
+            margin-left: 10px;
+          }
+          .user-avatar + span:hover{
+            color: $blue;
+            cursor: pointer;
+          }
         }
         .btn-area{
           :not(:first-child){
@@ -226,5 +330,12 @@
           border: none;
         }
     }
+  }
+  .blue-hover{
+    font-size: 1.2em;
+  }
+  .blue-hover:hover{
+    color: $blue;
+    cursor: pointer;
   }
 </style>
