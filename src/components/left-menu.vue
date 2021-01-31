@@ -4,7 +4,7 @@
       <span>useless player</span>
     </div>
     <a-menu
-      :default-selected-keys="['1']"
+      :default-selected-keys="[8]"
       :open-keys.sync="openKeys"
       mode="inline"
       @click="handleClick"
@@ -34,7 +34,7 @@
       </a-sub-menu>
       <a-sub-menu key="sub3">
         <span slot="title"><span>我的歌单</span></span>
-        <a-menu-item key="8" v-for="songList in songLists">
+        <a-menu-item @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
           {{songList.name}}
         </a-menu-item>
       </a-sub-menu>
@@ -43,13 +43,33 @@
 </template>
 
 <script>
+  import {bully} from "./service/bully";
+  import {SYSTEM_EVENTS} from "../Const";
+
   export default {
     name: "left-menu",
     data() {
       return {
         openKeys: ['sub1', 'sub2', 'sub3'],
-        songLists: [{name: 'my songs'}] // todo
+        songLists: [],
+        subscription: []
       };
+    },
+    mounted() {
+      const sub =  bully.getMessage().subscribe(res => {
+        if (res.type === SYSTEM_EVENTS.SYNC_LIST) {
+          this.songLists = res.data;
+        }
+      })
+      this.subscription.push(sub);
+    },
+    destroyed() {
+      for (const ite of this.subscription) {
+        if (ite) {
+          ite.unsubscribe();
+        }
+      }
+      this.subscription = null;
     },
     watch: {
       openKeys(val) {
@@ -63,6 +83,12 @@
       titleClick(e) {
         console.log('titleClick', e);
       },
+      selectSongList(idx) {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.CHANGE_SONG_LIST,
+          data: idx
+        })
+      }
     }
   }
 </script>

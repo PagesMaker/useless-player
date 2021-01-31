@@ -52,24 +52,23 @@
         <div class="music-list-body">
           <a-tabs default-active-key="1" @change="tabChanged(e)">
             <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
-              <a-table :pagination="false" class="song-listing" size="small"  :columns="columns" :data-source="songs">
+              <a-table :pagination="false" class="song-listing" size="small"  :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
                 <div slot="name" slot-scope="text" class="row-of-song-name">
-                  <span slot="heart" class="blue-hover heart-icon" > <a-icon class="favourite-songs" type="heart"></a-icon></span>
-                  <span class="song-name">{{ text }}</span>
-                  <span class="edit-area blue-hover">
-                    <a-icon type="download" title="下载"/>
-                    <a-icon type="delete" title="从播放列表删除" />
-                    <a-icon type="message" title="评论" />
-                    <a-icon type="share-alt" title="分享" v-if="false" /><!-- todo -->
-                    <a-icon type="plus-square" title="添加到" />
-                  </span>
+                  <div slot="heart" class="heart-icon" > <a-icon class="blue-hover favourite-songs" type="heart"></a-icon> <span :title="text.name" class="blue-hover  song-name">{{ text.name }}</span></div>
+                  <div class="edit-area" v-if="text.hover">
+                    <a-icon class="blue-hover" type="download" title="下载"/>
+                    <a-icon class="blue-hover" type="delete" title="从播放列表删除" />
+                    <a-icon class="blue-hover" type="message" title="评论" />
+                    <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" /><!-- todo -->
+                    <a-icon class="blue-hover" type="plus-square" title="添加到" />
+                  </div>
                 </div>
-                <span slot="singer" slot-scope="ar">
+                <span slot="singer" :title="getTitle(ar)" class="row-of-singer" slot-scope="ar">
                    <span v-for="(auth, index) in ar" @click="jumpToAuthorPage(auth)">
                         <span class="blue-hover">{{auth.name}}</span><span v-if="index !== ar.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-                <span slot="album" class="blue-hover" slot-scope="al">{{ al.name }}</span>
+                <span slot="album" :title="al.name" class="blue-hover row-of-album" slot-scope="al">{{ al.name }}</span>
               </a-table>
             </a-tab-pane>
             <a-tab-pane key="2" tab="最近收藏">
@@ -90,7 +89,7 @@
   import {SERVER} from "../main";
   import {UserInfos} from "./service/user-info.service";
 
-  const renderContent = (value, row, index) => {
+  /*const renderContent = (value, row, index) => {
     const obj = {
       children: value,
       attrs: {},
@@ -99,7 +98,7 @@
       obj.attrs.colSpan = 0;
     }
     return obj;
-  };
+  };*/
     export default {
       name: "list-component",
       data () {
@@ -116,21 +115,23 @@
           columns: [
             {
               title: '歌曲',
-              dataIndex: 'name',
-              width: 360,
-              ellipsis: true,
+              dataIndex: 'rowName',
+              fixed: 'left',
+              width: '40%',
               scopedSlots: { customRender: 'name' }
             },
             {
               title: '歌手',
               dataIndex: 'ar',
-              width: 240,
+              fixed: 'left',
+              width: '28%',
               scopedSlots: { customRender: 'singer' }
             },
             {
               title: '专辑',
               dataIndex: 'al',
-              width: 240,
+              fixed: 'left',
+              width: '30%',
               scopedSlots: { customRender: 'album' }
             }
           ]
@@ -139,13 +140,15 @@
       mounted() {
         this.initCrtListInfo();
         const sub =  bully.getMessage().subscribe(res => {
-          console.log(res, 1111);
           if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
             this.getListInfo(res.data);
             console.log(UserInfos);
             this.userInfo = UserInfos.userInfo;
           }
-        })
+          if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
+            this.setCrtList(res.data);
+          }
+        });
         this.subscription.push(sub);
       },
       destroyed() {
@@ -157,6 +160,9 @@
         this.subscription = null;
       },
       methods: {
+        getTitle(data) {
+          return data.map(item => item.name).join(' / ')
+        },
         getListInfo(data) {
           this.axios.post(SERVER + `/user/playlist`, {
             cookie: UserInfos.cookie,
@@ -165,18 +171,37 @@
             console.log(res);
             if (res.data.code === 200) {
               this.listInfo = res.data.playlist;
+              bully.setMessage({
+                type: SYSTEM_EVENTS.SYNC_LIST,
+                data: this.listInfo
+              })
               this.setCrtList(0);
-              this.getListDetail();
             }
           }, err => {
             console.log(err);
           })
+        },
+        setRowBehaviour(data) {
+          return {
+            on: { // 事件
+              mouseenter: () => {
+                data.rowName.hover = true;
+              },  // 鼠标移入行
+              mouseleave: () => {
+                data.rowName.hover = false;
+              }
+            },
+          };
         },
         getListDetail() {
           this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
             console.log(res);
             res.data.playlist.tracks.forEach(item => {
               item.musicSrc = this.getMusic(item.id);
+              item.rowName = {
+                name: item.name,
+                hover: false
+              }
             });
             this.songs = res.data.playlist.tracks;
           }, err => {
@@ -187,6 +212,7 @@
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
             this.crtListInfoIdx = i;
+            this.getListDetail();
           } else {
             this.initCrtListInfo();
           }
@@ -329,6 +355,12 @@
         /deep/ .ant-table-small{
           border: none;
         }
+      /deep/ .ant-table-fixed-left{
+        width: $max;
+        .ant-table-fixed{
+          width: $max!important;
+        }
+      }
     }
   }
   .blue-hover{
@@ -337,5 +369,44 @@
   .blue-hover:hover{
     color: $blue;
     cursor: pointer;
+  }
+  .row-of-song-name{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 4rem;
+    .heart-icon{
+      width: auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      .song-name{
+        margin-left: 10px;
+      }
+    }
+    .edit-area{
+      width: auto;
+      white-space: nowrap;
+    }
+  }
+  .row-of-singer{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 3rem;
+  }
+  .row-of-album{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 3rem;
   }
 </style>
