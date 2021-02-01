@@ -189,6 +189,12 @@
               },  // 鼠标移入行
               mouseleave: () => {
                 data.rowName.hover = false;
+              },
+              dblclick: () => {
+                bully.setMessage({
+                  type: SYSTEM_EVENTS.PLAY_MUSIC,
+                  data
+                })
               }
             },
           };

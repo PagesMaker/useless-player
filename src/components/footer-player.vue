@@ -3,22 +3,22 @@
     <div class="process-bar"></div>
     <div class="song-area">
       <div class="song-info">
-        <div v-if="songInfo.songImg !== ''" class="song-image">
-          <img :src="songInfo.songImg" alt="">
+        <div v-if="songInfo.al.picUrl !== ''" class="song-image">
+          <img :src="songInfo.al.picUrl" alt="">
         </div>
         <div class="song-image blue-bg" style="opacity: 0.7" v-else>
           <a-icon type="customer-service" />
         </div>
         <div class="song-name-area">
           <div class="song-name-content">
-            <span class="song-name">{{songInfo.songName}}</span>
+            <span class="song-name">{{songInfo.name}}</span>
             <span>&nbsp;-&nbsp;</span>
-            <span v-for="(auth, index) in songInfo.songAuthor" @click="jumpToAuthorPage(auth)">
-            <span>{{auth}}</span><span v-if="index !== songInfo.songAuthor.length - 1">&nbsp;/&nbsp;</span>
+            <span v-for="(auth, index) in songInfo.ar" @click="jumpToAuthorPage(auth)">
+            <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
           </span>
           </div>
           <div class="function-area">
-            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />
+<!--            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />-->
             <a-icon type="download" title="下载"/>
             <a-icon type="delete" title="从播放列表删除" />
             <a-icon type="message" title="评论" />
@@ -48,11 +48,14 @@
         </div>
       </div>
     </div>
-    <audio :src="songInfo.song" ></audio>
+    <audio :src="songInfo.musicSrc" ref="mainPlayer" preload="auto"  id="mainPlayer"></audio>
   </div>
 </template>
 
 <script>
+
+  import {bully} from "./service/bully";
+  import {SYSTEM_EVENTS} from "../Const";
 
   export default {
     name: 'footer-player',
@@ -62,17 +65,19 @@
         currentTime: 999,
         musicControl: {
           playMode: 'list', // 可能的类型，列表播放list，单曲循环single，列表循环list loop
-          isPlaying: false,
           openSoundAdjustPanel: false
         },
+        subscription: [],
         songInfo: {
-          song: '',
-          songImg: '',
-          songName: 'music',
-          songAuthor: ['11', '222', '33'],
-          isLike: false,
-          isLikeHover: false,
-          totalTime: ''
+          musicSrc: '',
+          al: {
+            picUrl: ''
+          },
+          name: 'music',
+          ar: [{
+            name: ''
+          }],
+          dt: 0
         },
         songList: []
       }
@@ -83,12 +88,49 @@
       },
       openPlayerWindow() {
 
+      },
+      play() {
+        console.log(this.songInfo.musicSrc);
+        this.$refs.mainPlayer.play();
+      },
+      pause() {
+        this.$refs.mainPlayer.pause();
       }
     },
     computed:{
       getSongTime() {
-        return !this.songInfo.totalTime ? '00:00' : this.songInfo.totalTime
+        return !this.songInfo.dt ? '00:00' : this.songInfo.dt
       }
+    },
+    mounted() {
+      const sub = bully.getMessage().subscribe(res => {
+        if (res.type === SYSTEM_EVENTS.PLAY_MUSIC) {
+          if (!this.$refs.mainPlayer.paused) {
+            this.pause();
+            const beforeSrc = this.$refs.mainPlayer.src;
+            this.songInfo.musicSrc = '';
+            if (res.data.musicSrc === beforeSrc) {
+              return;
+            }
+          }
+          this.songInfo = JSON.parse(JSON.stringify(res.data));
+          setTimeout(() => {
+            if (this.$refs.mainPlayer.paused && this.songInfo.musicSrc !== '') {
+              // 暂停
+              this.play();
+            }
+          }, 200);
+        }
+      });
+      this.subscription.push(sub);
+    },
+    destroyed() {
+      for (const ite of this.subscription) {
+        if (ite) {
+          ite.unsubscribe();
+        }
+      }
+      this.subscription = null;
     }
   }
 </script>
