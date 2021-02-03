@@ -190,11 +190,15 @@
               mouseleave: () => {
                 data.rowName.hover = false;
               },
-              dblclick: () => {
-                bully.setMessage({
-                  type: SYSTEM_EVENTS.PLAY_MUSIC,
-                  data
-                })
+              dblclick: (e) => {
+                this.axios.get(SERVER + `/song/url?id=${data.id}&cookie=${UserInfos.cookie}`).then(res =>{
+                  console.log(res);
+                  data.url = res.data.data[0].url;
+                  bully.setMessage({
+                    type: SYSTEM_EVENTS.PLAY_MUSIC,
+                    data
+                  })
+                });
               }
             },
           };
@@ -203,13 +207,20 @@
           this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
             console.log(res);
             res.data.playlist.tracks.forEach(item => {
-              item.musicSrc = this.getMusic(item.id);
               item.rowName = {
                 name: item.name,
                 hover: false
               }
             });
             this.songs = res.data.playlist.tracks;
+            this.axios.get(SERVER + `/song/url?id=${this.songs[0].id}&cookie=${UserInfos.cookie}`).then(response =>{
+              const firstOne = this.songs[0];
+              firstOne.url = response.data.data[0].url;
+              bully.setMessage({
+                type: SYSTEM_EVENTS.PLAY_MUSIC,
+                data: firstOne
+              })
+            });
           }, err => {
             console.log(err);
           })
@@ -233,9 +244,6 @@
         toggleSearch(e) {
           this.searchMode = e;
           this.searchText = '';
-        },
-        getMusic(musicId) {
-          return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
         },
         jumpToAuthorPage(auth) {
         }
@@ -357,6 +365,9 @@
     .music-list-body{
       /deep/ .ant-tabs-bar{
         border: none;
+      }
+      /deep/ .ant-table-row{
+        user-select: none;
       }
         /deep/ .ant-table-small{
           border: none;

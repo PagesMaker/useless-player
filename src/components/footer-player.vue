@@ -41,14 +41,14 @@
       </div>
       <div class="right-control-area">
         <div class="time-area">
-          <span>{{currentTime | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
+          <span>{{ currentTime  | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
         </div>
         <div class="list-area">
           <a-icon type="menu" title=""/>
         </div>
       </div>
     </div>
-    <audio :src="songInfo.musicSrc" ref="mainPlayer" preload="auto"  id="mainPlayer"></audio>
+    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
   </div>
 </template>
 
@@ -56,20 +56,23 @@
 
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
-
+  import {Subject} from 'rxjs';
+  import {throttleTime} from 'rxjs/operators';
   export default {
     name: 'footer-player',
     data() {
       return {
         addToSongListShow: false,
-        currentTime: 999,
+        currentTime: 0,
+        updateTime$: new Subject(),
         musicControl: {
           playMode: 'list', // 可能的类型，列表播放list，单曲循环single，列表循环list loop
           openSoundAdjustPanel: false
         },
+        init: true,
         subscription: [],
         songInfo: {
-          musicSrc: '',
+          url: '',
           al: {
             picUrl: ''
           },
@@ -89,40 +92,64 @@
       openPlayerWindow() {
 
       },
+      getMusic(musicId) {
+        return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
+      },
       play() {
-        console.log(this.songInfo.musicSrc);
-        this.$refs.mainPlayer.play();
+        console.log(this.songInfo.url);
+       try {
+         this.$refs.mainPlayer.play();
+       } catch (e) {
+         this.songInfo.url = this.getMusic(this.songInfo.id);
+         setTimeout(() => {
+           this.$refs.mainPlayer.play();
+         })
+       }
       },
       pause() {
         this.$refs.mainPlayer.pause();
+      },
+      updateCurrentTime() {
+        this.updateTime$.next();
       }
     },
     computed:{
       getSongTime() {
-        return !this.songInfo.dt ? '00:00' : this.songInfo.dt
+        return !this.songInfo.dt? 0 : this.songInfo.dt / 1000
       }
     },
     mounted() {
+      const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(res => {
+        this.currentTime = +this.$refs.mainPlayer.currentTime.toFixed(0);
+      })
       const sub = bully.getMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.PLAY_MUSIC) {
-          if (!this.$refs.mainPlayer.paused) {
-            this.pause();
-            const beforeSrc = this.$refs.mainPlayer.src;
-            this.songInfo.musicSrc = '';
-            if (res.data.musicSrc === beforeSrc) {
-              return;
+          try {
+            if (!this.$refs.mainPlayer.paused) {
+              this.pause();
+              this.songInfo.url = '';
             }
+            this.$nextTick(() => {
+              this.songInfo = JSON.parse(JSON.stringify(res.data));
+              this.$nextTick(() => {
+                if (this.$refs.mainPlayer.paused) {
+                  // 暂停
+                  if (this.songInfo.fee === 1) {
+                    this.$message.warning('该歌曲为收费曲目，只能试听15秒');
+                  }
+                  if (!this.init) {
+                    this.play();
+                  } else {
+                    this.init = false;
+                  }
+                }
+              });
+            });
+          } catch (e) {
           }
-          this.songInfo = JSON.parse(JSON.stringify(res.data));
-          setTimeout(() => {
-            if (this.$refs.mainPlayer.paused && this.songInfo.musicSrc !== '') {
-              // 暂停
-              this.play();
-            }
-          }, 200);
         }
       });
-      this.subscription.push(sub);
+      this.subscription.push(sub, sub0);
     },
     destroyed() {
       for (const ite of this.subscription) {

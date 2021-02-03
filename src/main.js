@@ -7,18 +7,23 @@ import mainContent from './components/main-content';
 import 'font-awesome/css/font-awesome.css';
 import moment from "moment";
 import axios from 'axios';
+import Rx from 'rxjs/Rx'
 import VueAxios from 'vue-axios';
+import VueRx from "vue-rx";
+
 const config = require('../config');
 
 Vue.use(Antd);
 Vue.use(VueAxios, axios);
+Vue.use(VueRx, Rx);
 Vue.config.productionTip = false;
 Vue.filter('timeFormat', function (value, format = '') {
   console.log(value,format);
-  if (isNaN(value) || !(value instanceof Number)) {
+  if (isNaN(value) ||  typeof value !== 'number') {
     value = 0;
   }
-  return moment(moment({minute: Math.floor(value / 60), second: value % 60})).format(format);
+  console.log(moment({minute: Math.floor(value / 60), second: value % 60}).format(format));
+  return moment({minute: Math.floor(value / 60), second: value % 60}).format(format);
 })
 
 new Vue({
