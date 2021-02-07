@@ -32,10 +32,10 @@
         <a-icon v-if="musicControl.playMode === 'list loop'" type="sync" title="列表循环" />
         <a-icon v-if="musicControl.playMode === 'list'" type="ordered-list" title="列表播放" />
         <div v-if="musicControl.playMode === 'single'" class="single-song-loop"><a-icon type="sync" title="单曲循环"/><span>1</span></div>
-        <a-icon type="step-backward" title="上一首"/>
-        <a-icon v-if="!musicControl.isPlaying" type="play-circle" title="播放" theme="filled" />
-        <a-icon v-if="musicControl.isPlaying" type="pause-circle" title="暂停" theme="filled" />
-        <a-icon type="step-forward" title="下一首"/>
+        <a-icon type="step-backward" @click="switchMusic('last')" title="上一首"/>
+        <a-icon v-show="isPaused" @click="switchPlayStatus()" type="play-circle" title="播放" theme="filled" />
+        <a-icon v-show="!isPaused" @click="switchPlayStatus()" type="pause-circle" title="暂停" theme="filled" />
+        <a-icon type="step-forward" @click="switchMusic('next')" title="下一首"/>
         <a-icon type="sound"  title="音量"/>
         <div class="adjust-sound" v-if="musicControl.openSoundAdjustPanel"></div>
       </div>
@@ -48,7 +48,7 @@
         </div>
       </div>
     </div>
-    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
+    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
   </div>
 </template>
 
@@ -64,6 +64,7 @@
       return {
         addToSongListShow: false,
         currentTime: 0,
+        isPaused: false,
         updateTime$: new Subject(),
         musicControl: {
           playMode: 'list', // 可能的类型，列表播放list，单曲循环single，列表循环list loop
@@ -71,6 +72,7 @@
         },
         init: true,
         subscription: [],
+        player: {},
         songInfo: {
           url: '',
           al: {
@@ -92,25 +94,34 @@
       openPlayerWindow() {
 
       },
+      switchMusic(e) {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.SWITCH_SONG,
+          data: e
+        })
+      },
       getMusic(musicId) {
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
       play() {
         console.log(this.songInfo.url);
        try {
-         this.$refs.mainPlayer.play();
+         this.player.play();
        } catch (e) {
          this.songInfo.url = this.getMusic(this.songInfo.id);
          setTimeout(() => {
-           this.$refs.mainPlayer.play();
+           this.player.play();
          })
        }
       },
       pause() {
-        this.$refs.mainPlayer.pause();
+        this.player.pause();
       },
       updateCurrentTime() {
         this.updateTime$.next();
+      },
+      switchPlayStatus() {
+        this.player.paused ? this.play() : this.pause();
       }
     },
     computed:{
@@ -119,20 +130,24 @@
       }
     },
     mounted() {
-      const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(res => {
-        this.currentTime = +this.$refs.mainPlayer.currentTime.toFixed(0);
+      this.isPaused = true;
+      this.player = this.$refs.mainPlayer;
+      const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(() => {
+        if (!this.isPaused) {
+          this.currentTime = +this.player.currentTime.toFixed(0);
+        }
       })
       const sub = bully.getMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.PLAY_MUSIC) {
           try {
-            if (!this.$refs.mainPlayer.paused) {
+            if (!this.player.paused) {
               this.pause();
               this.songInfo.url = '';
             }
             this.$nextTick(() => {
               this.songInfo = JSON.parse(JSON.stringify(res.data));
               this.$nextTick(() => {
-                if (this.$refs.mainPlayer.paused) {
+                if (this.player.paused) {
                   // 暂停
                   if (this.songInfo.fee === 1) {
                     this.$message.warning('该歌曲为收费曲目，只能试听15秒');
@@ -227,7 +242,7 @@
           font-size: 2em;
           margin: 0 10px;
         }
-        /deep/ .anticon.anticon-play-circle{
+        /deep/ .anticon.anticon-play-circle , .anticon.anticon-pause-circle{
           font-size: 3em;
           color: $blue;
         }

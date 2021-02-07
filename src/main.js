@@ -18,11 +18,9 @@ Vue.use(VueAxios, axios);
 Vue.use(VueRx, Rx);
 Vue.config.productionTip = false;
 Vue.filter('timeFormat', function (value, format = '') {
-  console.log(value,format);
   if (isNaN(value) ||  typeof value !== 'number') {
     value = 0;
   }
-  console.log(moment({minute: Math.floor(value / 60), second: value % 60}).format(format));
   return moment({minute: Math.floor(value / 60), second: value % 60}).format(format);
 })
 

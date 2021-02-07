@@ -112,6 +112,7 @@
           songs: [],
           userInfo: {},
           listInfo: {},
+          currentSongIdx: 0,
           columns: [
             {
               title: '歌曲',
@@ -147,6 +148,23 @@
           }
           if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
             this.setCrtList(res.data);
+          }
+          if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
+            if (res.data === 'next') {
+              if (this.currentSongIdx + 1 >= this.songs.length) {
+                this.$message.warning('已经是最后一首了');
+                return;
+              }
+              this.currentSongIdx++;
+              this.getListDetail();
+            } else if (res.data === 'last') {
+              if (this.currentSongIdx - 1 < 0) {
+                this.$message.warning('已经是第一首了');
+                return;
+              }
+              this.currentSongIdx--;
+              this.getListDetail();
+            }
           }
         });
         this.subscription.push(sub);
@@ -190,40 +208,52 @@
               mouseleave: () => {
                 data.rowName.hover = false;
               },
-              dblclick: (e) => {
-                this.axios.get(SERVER + `/song/url?id=${data.id}&cookie=${UserInfos.cookie}`).then(res =>{
-                  console.log(res);
-                  data.url = res.data.data[0].url;
-                  bully.setMessage({
-                    type: SYSTEM_EVENTS.PLAY_MUSIC,
-                    data
-                  })
-                });
+              dblclick: () => {
+                this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
+                console.log(this.currentSongIdx);
+                this.getSongsDetail(data);
               }
             },
           };
         },
-        getListDetail() {
-          this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
+        getSongsDetail(data) {
+          this.axios.get(SERVER + `/song/url?id=${data.id}&cookie=${UserInfos.cookie}`).then(res =>{
             console.log(res);
-            res.data.playlist.tracks.forEach(item => {
-              item.rowName = {
-                name: item.name,
-                hover: false
-              }
-            });
-            this.songs = res.data.playlist.tracks;
-            this.axios.get(SERVER + `/song/url?id=${this.songs[0].id}&cookie=${UserInfos.cookie}`).then(response =>{
-              const firstOne = this.songs[0];
-              firstOne.url = response.data.data[0].url;
-              bully.setMessage({
-                type: SYSTEM_EVENTS.PLAY_MUSIC,
-                data: firstOne
-              })
-            });
-          }, err => {
-            console.log(err);
-          })
+            data.url = res.data.data[0].url;
+            bully.setMessage({
+              type: SYSTEM_EVENTS.PLAY_MUSIC,
+              data
+            })
+          });
+        },
+        getListDetail() {
+          if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url) {
+             this.getSongUrl();
+          } else {
+            this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
+              console.log(res);
+              res.data.playlist.tracks.forEach(item => {
+                item.rowName = {
+                  name: item.name,
+                  hover: false
+                }
+              });
+              this.songs = res.data.playlist.tracks;
+              this.getSongUrl();
+            }, err => {
+              console.log(err);
+            })
+          }
+        },
+        getSongUrl() {
+          this.axios.get(SERVER + `/song/url?id=${this.songs[this.currentSongIdx].id}&cookie=${UserInfos.cookie}`).then(response =>{
+            const data = this.songs[this.currentSongIdx];
+            data.url = response.data.data[0].url;
+            bully.setMessage({
+              type: SYSTEM_EVENTS.PLAY_MUSIC,
+              data: data
+            })
+          });
         },
         setCrtList(i) {
           if (this.listInfo[i]) {
