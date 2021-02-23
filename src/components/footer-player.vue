@@ -29,14 +29,21 @@
         </div>
       </div>
       <div class="center-control-area">
-        <a-icon v-if="musicControl.playMode === 'list loop'" type="sync" title="列表循环" />
-        <a-icon v-if="musicControl.playMode === 'list'" type="ordered-list" title="列表播放" />
-        <div v-if="musicControl.playMode === 'single'" class="single-song-loop"><a-icon type="sync" title="单曲循环"/><span>1</span></div>
+        <a-icon v-if="musicControl.playMode === 'list loop'" @click="switchPlayMode('list')" type="sync" title="列表循环" />
+        <a-icon v-if="musicControl.playMode === 'list'" @click="switchPlayMode('single')" type="ordered-list" title="列表播放" />
+        <div v-if="musicControl.playMode === 'single'" @click="switchPlayMode('list loop')" class="single-song-loop"><a-icon type="sync" title="单曲循环"/><span>1</span></div>
         <a-icon type="step-backward" @click="switchMusic('last')" title="上一首"/>
         <a-icon v-show="isPaused" @click="switchPlayStatus()" type="play-circle" title="播放" theme="filled" />
         <a-icon v-show="!isPaused" @click="switchPlayStatus()" type="pause-circle" title="暂停" theme="filled" />
         <a-icon type="step-forward" @click="switchMusic('next')" title="下一首"/>
-        <a-icon type="sound"  title="音量"/>
+        <a-dropdown :placement="placement">
+          <a-icon type="sound"  title="音量"/>
+          <div slot="overlay" class="adjust-sound-overlay">
+            <div class="sound-tool-bar">
+
+            </div>
+          </div>
+        </a-dropdown>
         <div class="adjust-sound" v-if="musicControl.openSoundAdjustPanel"></div>
       </div>
       <div class="right-control-area">
@@ -48,7 +55,7 @@
         </div>
       </div>
     </div>
-    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
+    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false" @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
   </div>
 </template>
 
@@ -72,6 +79,7 @@
         },
         init: true,
         subscription: [],
+        placement: 'topCenter',
         player: {},
         songInfo: {
           url: '',
@@ -100,6 +108,31 @@
           data: e
         })
       },
+      autoSwitchMusic() {
+        switch (this.musicControl.playMode) {
+          case "list": {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.SWITCH_SONG,
+              data: 'next'
+            })
+            break;
+          }
+          case "single": {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.SWITCH_SONG,
+              data: 'current'
+            })
+            break;
+          }
+          case "list loop": {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.SWITCH_SONG,
+              data: 'list loop'
+            })
+            break;
+          }
+        }
+      },
       getMusic(musicId) {
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
@@ -116,6 +149,9 @@
       },
       pause() {
         this.player.pause();
+      },
+      switchPlayMode(e) {
+        this.musicControl.playMode = e;
       },
       updateCurrentTime() {
         this.updateTime$.next();
@@ -161,6 +197,7 @@
               });
             });
           } catch (e) {
+            console.log(e);
           }
         }
       });
@@ -245,6 +282,16 @@
         /deep/ .anticon.anticon-play-circle , .anticon.anticon-pause-circle{
           font-size: 3em;
           color: $blue;
+        }
+        .single-song-loop{
+          position: relative;
+          span{
+            position: absolute;
+            left: 5px;
+            top: -1px;
+            user-select: none;
+            cursor: pointer;
+          }
         }
       }
       .right-control-area{

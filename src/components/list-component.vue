@@ -164,6 +164,13 @@
               }
               this.currentSongIdx--;
               this.getListDetail();
+            } else if (res.data === 'current') {
+              this.getListDetail();
+            } else if (res.data === 'list loop') {
+              if (this.currentSongIdx + 1 >= this.songs.length) {
+                this.currentSongIdx = 0;
+                this.getListDetail();
+              }
             }
           }
         });
