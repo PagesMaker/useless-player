@@ -7,7 +7,7 @@
           <img :src="songInfo.al.picUrl" alt="">
         </div>
         <div class="song-image blue-bg" style="opacity: 0.7" v-else>
-          <a-icon type="customer-service" />
+          <a-icon type="customer-service"/>
         </div>
         <div class="song-name-area">
           <div class="song-name-content">
@@ -18,33 +18,45 @@
           </span>
           </div>
           <div class="function-area">
-<!--            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />-->
+            <!--            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />-->
             <a-icon type="download" title="下载"/>
-            <a-icon type="delete" title="从播放列表删除" />
-            <a-icon type="message" title="评论" />
-            <a-icon type="share-alt" title="分享" v-if="false" /><!-- todo -->
-            <a-icon type="plus-square" title="添加到" />
+            <a-icon type="delete" title="从播放列表删除"/>
+            <a-icon type="message" title="评论"/>
+            <a-icon type="share-alt" title="分享" v-if="false"/><!-- todo -->
+            <a-icon type="plus-square" title="添加到"/>
             <div class="add-to-song-list" v-if="addToSongListShow"></div>
           </div>
         </div>
       </div>
       <div class="center-control-area">
-        <a-icon v-if="musicControl.playMode === 'list loop'" @click="switchPlayMode('list')" type="sync" title="列表循环" />
-        <a-icon v-if="musicControl.playMode === 'list'" @click="switchPlayMode('single')" type="ordered-list" title="列表播放" />
-        <div v-if="musicControl.playMode === 'single'" @click="switchPlayMode('list loop')" class="single-song-loop"><a-icon type="sync" title="单曲循环"/><span>1</span></div>
+        <a-icon v-if="musicControl.playMode === 'list loop'" @click="switchPlayMode('list')" type="sync" title="列表循环"/>
+        <a-icon v-if="musicControl.playMode === 'list'" @click="switchPlayMode('single')" type="ordered-list"
+                title="列表播放"/>
+        <div v-if="musicControl.playMode === 'single'" @click="switchPlayMode('list loop')" class="single-song-loop">
+          <a-icon type="sync" title="单曲循环"/>
+          <span>1</span></div>
         <a-icon type="step-backward" @click="switchMusic('last')" title="上一首"/>
-        <a-icon v-show="isPaused" @click="switchPlayStatus()" type="play-circle" title="播放" theme="filled" />
-        <a-icon v-show="!isPaused" @click="switchPlayStatus()" type="pause-circle" title="暂停" theme="filled" />
+        <a-icon v-show="isPaused" @click="switchPlayStatus()" type="play-circle" title="播放" theme="filled"/>
+        <a-icon v-show="!isPaused" @click="switchPlayStatus()" type="pause-circle" title="暂停" theme="filled"/>
         <a-icon type="step-forward" @click="switchMusic('next')" title="下一首"/>
-        <a-dropdown :placement="placement">
-          <a-icon type="sound"  title="音量"/>
+        <a-dropdown :placement="placement" v-model="soundPanelVisible" :trigger="['click']"
+                    overlayClassName="adjust-sound-overlay-content">
+          <a-icon type="sound" title="音量"/>
           <div slot="overlay" class="adjust-sound-overlay">
-            <div class="sound-tool-bar">
-
+            <div class="sound-tool-bar-area">
+              <div class="sound-tool-bar" @click.prevent.stop="adjustSound($event)">
+                <div class="current-sound" @mousedown.prevent.stop="adjustSound($event, 'drag')"
+                     :style="{'marginTop' : (((1 - sound / 100) * toolbarHeight) >= 135 ? 135 : (1 - sound / 100) * toolbarHeight)  + 'px'}"></div>
+                <div class="sound-percent"  :style="{'height' : sound / 100 * toolbarHeight + 'px'}"></div>
+              </div>
+            </div>
+            <div class="sound">{{ sound + '%'}}</div>
+            <div class="muted-area">
+              <a-icon type="sound" title="静音" @click="sound = 0"/>
             </div>
           </div>
         </a-dropdown>
-        <div class="adjust-sound" v-if="musicControl.openSoundAdjustPanel"></div>
+        <div class="mask" v-if="soundPanelVisible" @click="soundPanelVisible = false"></div>
       </div>
       <div class="right-control-area">
         <div class="time-area">
@@ -55,7 +67,8 @@
         </div>
       </div>
     </div>
-    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false" @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()"  id="mainPlayer"></audio>
+    <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false"
+           @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()" id="mainPlayer"></audio>
   </div>
 </template>
 
@@ -63,23 +76,33 @@
 
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
-  import {Subject} from 'rxjs';
-  import {throttleTime} from 'rxjs/operators';
+  import {fromEvent, Subject} from 'rxjs';
+  import {throttleTime, takeUntil} from 'rxjs/operators';
+
   export default {
     name: 'footer-player',
     data() {
       return {
         addToSongListShow: false,
         currentTime: 0,
+        sound: 50,
+        toolbarHeight: 140,
         isPaused: false,
         updateTime$: new Subject(),
         musicControl: {
           playMode: 'list', // 可能的类型，列表播放list，单曲循环single，列表循环list loop
           openSoundAdjustPanel: false
         },
+        soundPanelVisible: false,
         init: true,
         subscription: [],
         placement: 'topCenter',
+        dragEventSubscription$: null,
+        dragEndEventSubscription$: null,
+        dragEventMouseLeaveSubscription$: null,
+        dragEventMouseLeave$: null,
+        dragEndEvent$: null,
+        dragEvent$: null,
         player: {},
         songInfo: {
           url: '',
@@ -95,7 +118,7 @@
         songList: []
       }
     },
-    methods:{
+    methods: {
       jumpToAuthorPage(author) {
         console.log(author);
       },
@@ -137,15 +160,16 @@
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
       play() {
+        this.player.volume =  this.sound / 100
         console.log(this.songInfo.url);
-       try {
-         this.player.play();
-       } catch (e) {
-         this.songInfo.url = this.getMusic(this.songInfo.id);
-         setTimeout(() => {
-           this.player.play();
-         })
-       }
+        try {
+          this.player.play();
+        } catch (e) {
+          this.songInfo.url = this.getMusic(this.songInfo.id);
+          setTimeout(() => {
+            this.player.play();
+          })
+        }
       },
       pause() {
         this.player.pause();
@@ -156,13 +180,56 @@
       updateCurrentTime() {
         this.updateTime$.next();
       },
+      adjustSound(e, by = 'click') {
+        if (by === 'drag') {
+          const currentSound = this.sound;
+          this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
+          this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
+          this.dragEventMouseLeaveSubscription$ && this.dragEventMouseLeaveSubscription$.unsubscribe();
+          this.dragEventMouseLeave$ = fromEvent(document.getElementsByTagName("body")[0], 'mouseleave');
+          this.dragEventMouseLeaveSubscription$ = this.dragEventMouseLeave$.subscribe(() => {
+            this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
+            this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
+            this.dragEventSubscription$ = null;
+            this.dragEndEventSubscription$ = null;
+          });
+          this.dragEndEvent$ = fromEvent(document.getElementsByTagName('body')[0], 'mouseup');
+          this.dragEvent$ = fromEvent(document.getElementsByTagName("body")[0], 'mousemove').pipe(takeUntil(this.dragEndEvent$));
+          this.dragEndEventSubscription$ = this.dragEndEvent$.subscribe(() => {
+            this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
+            this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
+            this.dragEventSubscription$ = null;
+            this.dragEndEventSubscription$ = null;
+          });
+          this.dragEventSubscription$ = this.dragEvent$.subscribe(res => {
+            if (e.clientY - res.clientY >= this.toolbarHeight - currentSound / 100 * this.toolbarHeight) {
+              this.adjustSoundByValue(100);
+            } else if (e.clientY - res.clientY <= -(currentSound / 100 * this.toolbarHeight)) {
+              this.adjustSoundByValue(0);
+            } else {
+              const value = Math.floor(currentSound + ((e.clientY - res.clientY) / ( this.toolbarHeight / 100)));
+              this.adjustSoundByValue(value );
+            }
+          });
+        } else if (by === 'click') {
+          if (e.target.className === 'current-sound') {
+            return;
+          }
+          this.sound = Math.floor((1 - e.offsetY / this.toolbarHeight) * 100);
+          this.player.volume = this.sound / 100
+        }
+      },
+      adjustSoundByValue(value) {
+        this.sound = value;
+        this.player.volume = this.sound / 100
+      },
       switchPlayStatus() {
         this.player.paused ? this.play() : this.pause();
       }
     },
-    computed:{
+    computed: {
       getSongTime() {
-        return !this.songInfo.dt? 0 : this.songInfo.dt / 1000
+        return !this.songInfo.dt ? 0 : this.songInfo.dt / 1000
       }
     },
     mounted() {
@@ -216,17 +283,20 @@
 
 <style lang="scss" scoped>
 
-  .footer-player-content-box{
+  .footer-player-content-box {
     width: $max;
+
     /deep/ .anticon {
       font-size: 1.2em;
     }
-    .process-bar{
+
+    .process-bar {
       width: $max;
       height: 2px;
       background-color: $gray;
     }
-    .song-area{
+
+    .song-area {
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -234,29 +304,35 @@
       height: 60px;
       padding: 5px 20px;
       width: $max;
-      >div{
+
+      > div {
         width: $p33;
         height: $max;
         display: flex;
       }
-      .song-info{
+
+      .song-info {
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
-        .song-name-area{
+
+        .song-name-area {
           margin: 0 10px;
+
           /deep/ .anticon:not(:first-child) {
             padding: 0 3px;
           }
-          .song-name-content{
-            .song-name{
+
+          .song-name-content {
+            .song-name {
               color: black;
-              font-size: 16px;
+              font-size: 1.2em;
               font-weight: 500;
             }
           }
         }
-        .song-image{
+
+        .song-image {
           width: 40px;
           color: #E3E3E3;
           height: 40px;
@@ -265,27 +341,33 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          img{
+
+          img {
             width: $max;
             height: $max;
           }
         }
       }
-      .center-control-area{
+
+      .center-control-area {
         flex-direction: row;
         align-items: center;
         justify-content: center;
+
         /deep/ .anticon.anticon-step-backward, .anticon.anticon-step-forward {
           font-size: 2em;
           margin: 0 10px;
         }
-        /deep/ .anticon.anticon-play-circle , .anticon.anticon-pause-circle{
+
+        /deep/ .anticon.anticon-play-circle, .anticon.anticon-pause-circle {
           font-size: 3em;
           color: $blue;
         }
-        .single-song-loop{
+
+        .single-song-loop {
           position: relative;
-          span{
+
+          span {
             position: absolute;
             left: 5px;
             top: -1px;
@@ -294,17 +376,74 @@
           }
         }
       }
-      .right-control-area{
+
+      .right-control-area {
         flex-direction: row;
         align-items: center;
         justify-content: flex-end;
-        .list-area{
+
+        .list-area {
           margin-left: 10px;
+
           /deep/ .anticon {
-            line-height: unset!important;
+            line-height: unset !important;
           }
         }
       }
     }
+  }
+</style>
+<style lang="scss">
+  .mask {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+  }
+
+  .adjust-sound-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+    width: 75px;
+    height: 240px;
+    padding: 25px 0 15px 0;
+    background-color: #E3E3E3;
+
+    .sound-tool-bar-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 5%;
+      height: 70%;
+
+      .sound-tool-bar {
+        width: $max;
+        height: $max;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #C6D7E7;
+        .current-sound {
+          width: 8px;
+          height: 8px;
+          background-color: $blue;
+          border-radius: 10px;
+        }
+
+        .sound-percent {
+          background-color: $blue;
+          width: $max;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+  .muted-area{
+    margin-top: 12%;
   }
 </style>

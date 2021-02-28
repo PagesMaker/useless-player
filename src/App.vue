@@ -31,7 +31,9 @@ export default {
     width: 100%;
     padding: 30px;
   }
-
+  .anticon:hover{
+    color: $blue;
+  }
 
 
 </style>
