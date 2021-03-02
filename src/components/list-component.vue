@@ -52,9 +52,12 @@
         <div class="music-list-body">
           <a-tabs default-active-key="1" @change="tabChanged(e)">
             <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
-              <a-table :pagination="false" class="song-listing" size="small"  :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
-                <div slot="name" slot-scope="text" class="row-of-song-name">
-                  <div slot="heart" class="heart-icon" > <a-icon class="blue-hover favourite-songs" type="heart"></a-icon> <span :title="text.name" class="blue-hover  song-name">{{ text.name }}</span></div>
+              <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
+                <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index ? 'is-playing' : ''">
+                  <div slot="heart" class="heart-icon" >
+                    <a-icon class="blue-hover favourite-songs" type="heart"></a-icon>
+                    <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
+                  </div>
                   <div class="edit-area" v-if="text.hover">
                     <a-icon class="blue-hover" type="download" title="下载"/>
                     <a-icon class="blue-hover" type="delete" title="从播放列表删除" />
@@ -63,12 +66,12 @@
                     <a-icon class="blue-hover" type="plus-square" title="添加到" />
                   </div>
                 </div>
-                <span slot="singer" :title="getTitle(ar)" class="row-of-singer" slot-scope="ar">
-                   <span v-for="(auth, index) in ar" @click="jumpToAuthorPage(auth)">
-                        <span class="blue-hover">{{auth.name}}</span><span v-if="index !== ar.length - 1">&nbsp;/&nbsp;</span>
+                <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
+                   <span v-for="(auth, index) in text" @click="jumpToAuthorPage(auth)">
+                        <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-                <span slot="album" :title="al.name" class="blue-hover row-of-album" slot-scope="al">{{ al.name }}</span>
+                <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
               </a-table>
             </a-tab-pane>
             <a-tab-pane key="2" tab="最近收藏">
@@ -246,6 +249,7 @@
                 }
               });
               this.songs = res.data.playlist.tracks;
+              console.log(this.songs);
               this.getSongUrl();
             }, err => {
               console.log(err);
@@ -423,6 +427,9 @@
   .blue-hover:hover{
     color: $blue;
     cursor: pointer;
+  }
+  .is-playing{
+    color: $blue;
   }
   .row-of-song-name{
     display: flex;

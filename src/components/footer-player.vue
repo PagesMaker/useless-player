@@ -1,6 +1,8 @@
 <template>
-  <div class="footer-player-content-box">
-    <div class="process-bar"></div>
+  <div class="footer-player-content-box" ref="footerPlayerContentBox">
+    <div class="process-bar">
+      <process-bar :direction="'row'" :toolbar-length="processBarWidth" :process="process" @processChange="changeProcess($event)"></process-bar>
+    </div>
     <div class="song-area">
       <div class="song-info">
         <div v-if="songInfo.al.picUrl !== ''" class="song-image">
@@ -12,7 +14,7 @@
         <div class="song-name-area">
           <div class="song-name-content">
             <span class="song-name">{{songInfo.name}}</span>
-            <span>&nbsp;-&nbsp;</span>
+            <span v-if="songInfo.ar.length">&nbsp;-&nbsp;</span>
             <span v-for="(auth, index) in songInfo.ar" @click="jumpToAuthorPage(auth)">
             <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
           </span>
@@ -44,11 +46,7 @@
           <a-icon type="sound" title="音量"/>
           <div slot="overlay" class="adjust-sound-overlay">
             <div class="sound-tool-bar-area">
-              <div class="sound-tool-bar" @click.prevent.stop="adjustSound($event)">
-                <div class="current-sound" @mousedown.prevent.stop="adjustSound($event, 'drag')"
-                     :style="{'marginTop' : (((1 - sound / 100) * toolbarHeight) >= 135 ? 135 : (1 - sound / 100) * toolbarHeight)  + 'px'}"></div>
-                <div class="sound-percent"  :style="{'height' : sound / 100 * toolbarHeight + 'px'}"></div>
-              </div>
+              <process-bar :process="sound" :direction="'column'" :toolbar-length="toolbarHeight" @processChange="sound = $event"></process-bar>
             </div>
             <div class="sound">{{ sound + '%'}}</div>
             <div class="muted-area">
@@ -59,6 +57,9 @@
         <div class="mask" v-if="soundPanelVisible" @click="soundPanelVisible = false"></div>
       </div>
       <div class="right-control-area">
+        <div class="lyrics">
+          <i class="anticon">词</i>
+        </div>
         <div class="time-area">
           <span>{{ currentTime  | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
         </div>
@@ -77,16 +78,20 @@
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
   import {fromEvent, Subject} from 'rxjs';
-  import {throttleTime, takeUntil} from 'rxjs/operators';
-
+  import {takeUntil, throttleTime} from 'rxjs/operators';
+  import processBar from './process-bar';
   export default {
     name: 'footer-player',
+    components: {
+      processBar
+    },
     data() {
       return {
         addToSongListShow: false,
         currentTime: 0,
         sound: 50,
         toolbarHeight: 140,
+        processBarWidth: 0,
         isPaused: false,
         updateTime$: new Subject(),
         musicControl: {
@@ -97,12 +102,6 @@
         init: true,
         subscription: [],
         placement: 'topCenter',
-        dragEventSubscription$: null,
-        dragEndEventSubscription$: null,
-        dragEventMouseLeaveSubscription$: null,
-        dragEventMouseLeave$: null,
-        dragEndEvent$: null,
-        dragEvent$: null,
         player: {},
         songInfo: {
           url: '',
@@ -110,9 +109,7 @@
             picUrl: ''
           },
           name: 'music',
-          ar: [{
-            name: ''
-          }],
+          ar: [{}],
           dt: 0
         },
         songList: []
@@ -159,6 +156,13 @@
       getMusic(musicId) {
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
+      changeProcess(e) {
+        console.log(e, this.getSongTime);
+        this.player.currentTime = this.getSongTime * (e / 100);
+        if (this.player.isPaused) {
+          this.play();
+        }
+      },
       play() {
         this.player.volume =  this.sound / 100
         console.log(this.songInfo.url);
@@ -180,49 +184,6 @@
       updateCurrentTime() {
         this.updateTime$.next();
       },
-      adjustSound(e, by = 'click') {
-        if (by === 'drag') {
-          const currentSound = this.sound;
-          this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
-          this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
-          this.dragEventMouseLeaveSubscription$ && this.dragEventMouseLeaveSubscription$.unsubscribe();
-          this.dragEventMouseLeave$ = fromEvent(document.getElementsByTagName("body")[0], 'mouseleave');
-          this.dragEventMouseLeaveSubscription$ = this.dragEventMouseLeave$.subscribe(() => {
-            this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
-            this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
-            this.dragEventSubscription$ = null;
-            this.dragEndEventSubscription$ = null;
-          });
-          this.dragEndEvent$ = fromEvent(document.getElementsByTagName('body')[0], 'mouseup');
-          this.dragEvent$ = fromEvent(document.getElementsByTagName("body")[0], 'mousemove').pipe(takeUntil(this.dragEndEvent$));
-          this.dragEndEventSubscription$ = this.dragEndEvent$.subscribe(() => {
-            this.dragEventSubscription$ && this.dragEventSubscription$.unsubscribe();
-            this.dragEndEventSubscription$ && this.dragEndEventSubscription$.unsubscribe();
-            this.dragEventSubscription$ = null;
-            this.dragEndEventSubscription$ = null;
-          });
-          this.dragEventSubscription$ = this.dragEvent$.subscribe(res => {
-            if (e.clientY - res.clientY >= this.toolbarHeight - currentSound / 100 * this.toolbarHeight) {
-              this.adjustSoundByValue(100);
-            } else if (e.clientY - res.clientY <= -(currentSound / 100 * this.toolbarHeight)) {
-              this.adjustSoundByValue(0);
-            } else {
-              const value = Math.floor(currentSound + ((e.clientY - res.clientY) / ( this.toolbarHeight / 100)));
-              this.adjustSoundByValue(value );
-            }
-          });
-        } else if (by === 'click') {
-          if (e.target.className === 'current-sound') {
-            return;
-          }
-          this.sound = Math.floor((1 - e.offsetY / this.toolbarHeight) * 100);
-          this.player.volume = this.sound / 100
-        }
-      },
-      adjustSoundByValue(value) {
-        this.sound = value;
-        this.player.volume = this.sound / 100
-      },
       switchPlayStatus() {
         this.player.paused ? this.play() : this.pause();
       }
@@ -230,9 +191,17 @@
     computed: {
       getSongTime() {
         return !this.songInfo.dt ? 0 : this.songInfo.dt / 1000
+      },
+      process() {
+        const process = (this.currentTime / this.getSongTime) * 100;
+        return isNaN(process) ? 0 : process
       }
     },
     mounted() {
+      this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
+      fromEvent(window, 'resize').pipe(throttleTime(100)).subscribe(() => {
+        this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
+      });
       this.isPaused = true;
       this.player = this.$refs.mainPlayer;
       const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(() => {
@@ -277,6 +246,13 @@
         }
       }
       this.subscription = null;
+    },
+    watch: {
+      sound: {
+        handler(val) {
+          this.player.volume = val / 100;
+        }
+      }
     }
   }
 </script>
@@ -292,7 +268,7 @@
 
     .process-bar {
       width: $max;
-      height: 2px;
+      height: 3px;
       background-color: $gray;
     }
 
@@ -366,7 +342,6 @@
 
         .single-song-loop {
           position: relative;
-
           span {
             position: absolute;
             left: 5px;
@@ -375,19 +350,29 @@
             cursor: pointer;
           }
         }
+        .single-song-loop:hover{
+          color: $blue;
+        }
       }
 
       .right-control-area {
         flex-direction: row;
         align-items: center;
         justify-content: flex-end;
-
+        display: flex;
+        .lyrics{
+          margin-right: 10px;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          display: flex;
+        }
         .list-area {
           margin-left: 10px;
-
-          /deep/ .anticon {
-            line-height: unset !important;
-          }
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          display: flex;
         }
       }
     }
@@ -420,27 +405,6 @@
       justify-content: flex-start;
       width: 5%;
       height: 70%;
-
-      .sound-tool-bar {
-        width: $max;
-        height: $max;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background-color: #C6D7E7;
-        .current-sound {
-          width: 8px;
-          height: 8px;
-          background-color: $blue;
-          border-radius: 10px;
-        }
-
-        .sound-percent {
-          background-color: $blue;
-          width: $max;
-          pointer-events: none;
-        }
-      }
     }
   }
   .muted-area{

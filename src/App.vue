@@ -15,6 +15,9 @@ export default {
     padding: 0;
     list-style: none;
   }
+  html{
+    cursor: default;
+  }
   #app{
     font-size: unset;
     width: 100%;
@@ -24,7 +27,7 @@ export default {
     background-color: $blue;
   }
   .anticon{
-    cursor: pointer;
+    cursor: pointer!important;
   }
   .router-content{
     height: 100%;
@@ -34,6 +37,4 @@ export default {
   .anticon:hover{
     color: $blue;
   }
-
-
 </style>
