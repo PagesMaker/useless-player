@@ -297,6 +297,9 @@
     width: $max;
     height: $max;
     overflow: auto;
+    /deep/ .ant-table-fixed-left, .ant-table-fixed-right{
+      z-index: 0!important;
+    }
     /deep/ .anticon {
       font-size: 1.2em;
     }
@@ -470,4 +473,5 @@
     width: 100%;
     max-width: 3rem;
   }
+
 </style>

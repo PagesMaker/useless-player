@@ -1,23 +1,24 @@
 <template>
-  <div class="footer-player-content-box" ref="footerPlayerContentBox">
+  <div class="footer-player-content-box" :class="musicDetailShow ? 'music-detail-footer-player' : ''" ref="footerPlayerContentBox">
     <div class="process-bar">
       <process-bar :direction="'row'" :toolbar-length="processBarWidth" :process="process" @processChange="changeProcess($event)"></process-bar>
     </div>
     <div class="song-area">
       <div class="song-info">
-        <div v-if="songInfo.al.picUrl !== ''" class="song-image">
-          <img :src="songInfo.al.picUrl" alt="">
+        <div v-if="songInfo.al.picUrl !== '' && !musicDetailShow" @mouseenter="pictureHover = true" @mouseleave="pictureHover = false" @click="openMusicDetail()" class="song-image">
+          <img :src="songInfo.al.picUrl" alt="" :style="{filter: pictureHover ? 'brightness(0.7)' : 'unset'}">
+          <a-icon v-if="pictureHover" class="song-image-icon" type="double-left"/>
         </div>
-        <div class="song-image blue-bg" style="opacity: 0.7" v-else>
+        <div class="song-image blue-bg" style="opacity: 0.7" v-else-if="songInfo.al.picUrl === '' && !musicDetailShow">
           <a-icon type="customer-service"/>
         </div>
         <div class="song-name-area">
-          <div class="song-name-content">
+          <div class="song-name-content" v-if="!musicDetailShow">
             <span class="song-name">{{songInfo.name}}</span>
             <span v-if="songInfo.ar.length">&nbsp;-&nbsp;</span>
             <span v-for="(auth, index) in songInfo.ar" @click="jumpToAuthorPage(auth)">
-            <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
-          </span>
+               <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
+            </span>
           </div>
           <div class="function-area">
             <!--            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />-->
@@ -70,6 +71,7 @@
     </div>
     <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false"
            @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()" id="mainPlayer"></audio>
+      <music-detail :songInfo="songInfo" v-if="musicDetailShow"></music-detail>
   </div>
 </template>
 
@@ -78,12 +80,14 @@
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
   import {fromEvent, Subject} from 'rxjs';
-  import {takeUntil, throttleTime} from 'rxjs/operators';
+  import {debounceTime, throttleTime} from 'rxjs/operators';
   import processBar from './process-bar';
+  import musicDetail from './music-detail';
   export default {
     name: 'footer-player',
     components: {
-      processBar
+      processBar,
+      musicDetail
     },
     data() {
       return {
@@ -92,6 +96,7 @@
         sound: 50,
         toolbarHeight: 140,
         processBarWidth: 0,
+        changeProcess$: new Subject(),
         isPaused: false,
         updateTime$: new Subject(),
         musicControl: {
@@ -100,6 +105,8 @@
         },
         soundPanelVisible: false,
         init: true,
+        musicDetailShow: false,
+        pictureHover: false,
         subscription: [],
         placement: 'topCenter',
         player: {},
@@ -119,8 +126,8 @@
       jumpToAuthorPage(author) {
         console.log(author);
       },
-      openPlayerWindow() {
-
+      openMusicDetail() {
+        this.musicDetailShow = true;
       },
       switchMusic(e) {
         bully.setMessage({
@@ -157,8 +164,7 @@
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
       changeProcess(e) {
-        console.log(e, this.getSongTime);
-        this.player.currentTime = this.getSongTime * (e / 100);
+        this.changeProcess$.next(e);
         if (this.player.isPaused) {
           this.play();
         }
@@ -198,6 +204,9 @@
       }
     },
     mounted() {
+      this.changeProcess$.asObservable().pipe(debounceTime(500)).subscribe(e => {
+        this.player.currentTime = this.getSongTime * (e / 100);
+      });
       this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
       fromEvent(window, 'resize').pipe(throttleTime(100)).subscribe(() => {
         this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
@@ -258,7 +267,11 @@
 </script>
 
 <style lang="scss" scoped>
-
+  .music-detail-footer-player{
+    position: fixed;
+    left: 0;
+    bottom: 0;
+  }
   .footer-player-content-box {
     width: $max;
 
@@ -309,15 +322,21 @@
         }
 
         .song-image {
+          cursor: pointer;
           width: 40px;
           color: #E3E3E3;
           height: 40px;
           border-radius: 5px;
-          font-size: 2em;
+          font-size: 20px;
+          font-weight: 200;
           display: flex;
           justify-content: center;
           align-items: center;
-
+          /deep/ .song-image-icon{
+            transform: rotate(90deg);
+            color: white;
+            position: absolute;
+          }
           img {
             width: $max;
             height: $max;
