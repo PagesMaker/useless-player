@@ -340,7 +340,7 @@
         align-items: flex-start;
         justify-content: space-between;
         .list-name{
-          font-size: 0.2rem;
+          font-size: 1.8em;
           color: $black;
           font-weight: bold;
         }

@@ -5,3 +5,7 @@ export const SYSTEM_EVENTS = {
   PLAY_MUSIC: 'play-music',
   SWITCH_SONG: 'switch-song'
 }
+export const APP = {
+  MIN_WIDTH: 1080,
+  MIN_HEIGHT: 730
+}

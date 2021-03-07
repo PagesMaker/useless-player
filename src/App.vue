@@ -17,6 +17,8 @@ export default {
   }
   html{
     cursor: default;
+    min-width: $minWidth;
+    min-height: $minHeight;
   }
   #app{
     font-size: unset;
@@ -28,6 +30,7 @@ export default {
   }
   .anticon{
     cursor: pointer!important;
+    color: rgb(160,160,160);
   }
   .router-content{
     height: 100%;

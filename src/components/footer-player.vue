@@ -71,14 +71,22 @@
     </div>
     <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false"
            @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()" id="mainPlayer"></audio>
-      <music-detail :songInfo="songInfo" v-if="musicDetailShow"></music-detail>
+      <a-modal v-if="musicDetailShow"
+               :visible="true"
+               :keyboard="true"
+               :closable="false"
+               :footer="null"
+               wrapClassName="music-details"
+      >
+        <music-detail @closeMusicDetail="closeMusicDetail()" :songInfo="songInfo" v-if="musicDetailShow" :isPaused="isPaused"></music-detail>
+      </a-modal>
   </div>
 </template>
 
 <script>
 
   import {bully} from "./service/bully";
-  import {SYSTEM_EVENTS} from "../Const";
+  import {APP, SYSTEM_EVENTS} from "../Const";
   import {fromEvent, Subject} from 'rxjs';
   import {debounceTime, throttleTime} from 'rxjs/operators';
   import processBar from './process-bar';
@@ -128,6 +136,10 @@
       },
       openMusicDetail() {
         this.musicDetailShow = true;
+      },
+      closeMusicDetail() {
+        this.musicDetailShow = false;
+        this.pictureHover = false;
       },
       switchMusic(e) {
         bully.setMessage({
@@ -210,6 +222,9 @@
       this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
       fromEvent(window, 'resize').pipe(throttleTime(100)).subscribe(() => {
         this.processBarWidth = this.$refs.footerPlayerContentBox.clientWidth - 10;
+        if (window.innerHeight < APP.MIN_HEIGHT || window.innerHeight < APP.MIN_WIDTH) {
+          window.resizeTo(APP.MIN_WIDTH, APP.MIN_HEIGHT);
+        }
       });
       this.isPaused = true;
       this.player = this.$refs.mainPlayer;
@@ -271,6 +286,7 @@
     position: fixed;
     left: 0;
     bottom: 0;
+    z-index: 10000;
   }
   .footer-player-content-box {
     width: $max;
@@ -348,7 +364,12 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
-
+        /deep/ .anticon{
+          color: black!important;
+        }
+        /deep/ .anticon:hover{
+          color: #5DB1FF!important
+        }
         /deep/ .anticon.anticon-step-backward, .anticon.anticon-step-forward {
           font-size: 2em;
           margin: 0 10px;
@@ -356,11 +377,15 @@
 
         /deep/ .anticon.anticon-play-circle, .anticon.anticon-pause-circle {
           font-size: 3em;
-          color: $blue;
+          color: #5DB1FF!important;
         }
 
         .single-song-loop {
           position: relative;
+          color: black!important;
+          /deep/ .anticon{
+            color: unset!important;
+          }
           span {
             position: absolute;
             left: 5px;
@@ -370,7 +395,7 @@
           }
         }
         .single-song-loop:hover{
-          color: $blue;
+          color: $blue!important;
         }
       }
 
@@ -393,6 +418,19 @@
           justify-content: center;
           display: flex;
         }
+      }
+    }
+  }
+  .music-detail-footer-player.footer-player-content-box {
+    .time-area{
+      color: rgb(160,160,160);
+    }
+    .center-control-area {
+      /deep/ .anticon{
+        color: white!important;
+      }
+      .single-song-loop {
+        color: white!important;
       }
     }
   }
@@ -428,5 +466,25 @@
   }
   .muted-area{
     margin-top: 12%;
+  }
+  .ant-modal-wrap.music-details{
+    overflow: hidden;
+    width: $max!important;
+    height: $max!important;
+    .ant-modal {
+      width: $max!important;
+      height: $max!important;
+      padding: 0!important;
+      top: 0!important;
+      .ant-modal-content{
+        width: $max!important;
+        height: $max!important;
+        .ant-modal-body{
+          width: $max!important;
+          height: $max!important;
+          padding: 0!important;
+        }
+      }
+    }
   }
 </style>
