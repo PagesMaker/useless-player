@@ -5,10 +5,20 @@
           <a-icon type="down" class="close-music-detail" @click="closeMusicDetail()"/>
           <div class="music-detail-wrapper">
             <div class="music-detail-left-image">
-              <img v-if="songInfo.al.picUrl" :src="songInfo.al.picUrl" alt=""/>
+              <img :style="{animationPlayState: isPaused ? 'paused' : 'running'}" v-if="songInfo.al.picUrl" :src="songInfo.al.picUrl" alt=""/>
             </div>
             <div class="music-detail-right-area">
-
+              <div class="music-title">
+                <p>{{songInfo.name}}</p>
+                <div>
+                  <span :title="getTitle" v-for="(auth, index) in songInfo.ar" @click="jumpToAuthorPage(auth)">
+                        <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
+                  </span>
+                </div>
+                <div>
+                  <span :title="songInfo.al && songInfo.al.name">{{songInfo.al && songInfo.al.name}}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -26,6 +36,14 @@
       methods: {
         closeMusicDetail() {
           this.$emit('closeMusicDetail', null);
+        },
+        jumpToAuthorPage() {
+          this.$emit('jumpToAuthorPage', null);
+        }
+      },
+      computed: {
+        getTitle() {
+          return this.songInfo.ar.map(item => item.name).join(' / ');
         }
       },
       props: ['songInfo', 'isPaused'],
@@ -38,9 +56,7 @@
     height: $max;
     background-color: black;
     .music-detail-content{
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
+      @include flex(row, center, unset);
       position: relative;
       width: $max;
       height: $max;
@@ -57,18 +73,33 @@
         overflow: hidden;
         width: 75%;
         min-width: $minWidth;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        @include flex(row, space-between);
         .music-detail-left-image{
-          padding: 0 10% 0 10%;
+          padding: 0 5% 0 10%;
           img{
-            width: 430px;
-            height: 430px;
+            width: $songImageWidth;
+            height: $songImageWidth;
+            border-radius: 100%;
+            -webkit-animation:play 3s linear infinite;
+            -moz-animation:play 3s linear infinite;
+            animation:play 3s linear infinite;
+            animation-play-state: paused;
+            @keyframes play{
+              0%  {
+                -webkit-transform:rotate(0deg);
+              }
+              100% {
+                -webkit-transform:rotate(360deg);
+              }
+            }
           }
         }
         .music-detail-right-area{
-
+          @include flex(column, space-between);
+          width: calc(100% - #{$songImageWidth} - 10% - 5%);
+          height: 100%;
+          padding: 8% 0 8% 0;
+          color: white;
         }
       }
     }

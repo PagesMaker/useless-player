@@ -21,7 +21,7 @@
             </div>
             <div class="btn-area">
               <a-button >
-                <a-icon type="play-circle" title="播放" theme="outlined" />
+                <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
               <a-button >
@@ -306,10 +306,7 @@
     .music-list-header{
       height: 165px;
       width: $max;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-start;
+      @include flex(row, flex-start, center);
       .music-list-img-box{
         width: 165px;
         height: $max;
@@ -335,10 +332,7 @@
       .list-infos-box{
         margin-left: 20px;
         height: $max;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: space-between;
+        @include flex(column, space-between, flex-start);
         .list-name{
           font-size: 1.8em;
           color: $black;
@@ -346,10 +340,7 @@
         }
         .user-infos-box{
           color: $black;
-          display: flex;
-          flex-direction: row;
-          justify-content: flex-start;
-          align-items: center;
+          @include flex(row, flex-start, center);
           .user-avatar{
             width: 30px;
             height: 30px;
@@ -367,9 +358,7 @@
           :not(:first-child){
             margin-left: 10px;
           }
-          display: flex;
-          flex-direction: row;
-          align-items: center;
+          @include flex(row, unset, center);
           /deep/ .ant-input-affix-wrapper{
             border: none;
             width: 150px;
@@ -435,18 +424,12 @@
     color: $blue;
   }
   .row-of-song-name{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    @include flex(row, space-between, center);
     width: 100%;
     max-width: 4rem;
     .heart-icon{
+      @include flex(row, flex-start, center);
       width: auto;
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

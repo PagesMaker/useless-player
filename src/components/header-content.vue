@@ -178,10 +178,7 @@
   .header-content-box{
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    @include flex(row, space-between, center);
     /deep/ .anticon.anticon-user{
       font-size:2em;
     }
@@ -197,10 +194,7 @@
     .user-infos{
       width: 20%;
       height: auto;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
+      @include flex(row, center, center);
       >span{
         margin-left: 10px;
       }
@@ -212,10 +206,7 @@
   .login-modal{
     .login-content{
       height: 200px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
+      @include flex(column, space-between, center);
       .login-image{
         width: 203px;
         height: 107px;
@@ -229,10 +220,7 @@
   }
   .user-infos-box{
     color: $black;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
+    @include flex(row, flex-start, center);
     .user-avatar{
       width: 30px;
       height: 30px;

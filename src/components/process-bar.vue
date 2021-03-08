@@ -115,8 +115,7 @@
   .process-tool-bar {
     width: $max;
     height: $max;
-    display: flex;
-    align-items: center;
+    @include flex(row, unset, center);
     background-color: #C6D7E7;
 
     .current-process {

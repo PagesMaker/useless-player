@@ -302,10 +302,7 @@
     }
 
     .song-area {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
+      @include flex(row, space-between, center);
       height: 60px;
       padding: 5px 20px;
       width: $max;
@@ -317,10 +314,7 @@
       }
 
       .song-info {
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-
+        @include flex(row, flex-start, center);
         .song-name-area {
           margin: 0 10px;
 
@@ -345,9 +339,7 @@
           border-radius: 5px;
           font-size: 20px;
           font-weight: 200;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+          @include flex(row, center, center);
           /deep/ .song-image-icon{
             transform: rotate(90deg);
             color: white;
@@ -361,9 +353,7 @@
       }
 
       .center-control-area {
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
+        @include flex(row, center, center);
         /deep/ .anticon{
           color: black!important;
         }
@@ -400,23 +390,14 @@
       }
 
       .right-control-area {
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-end;
-        display: flex;
+        @include flex(row, flex-end, center);
         .lyrics{
           margin-right: 10px;
-          flex-direction: row;
-          align-items: center;
-          justify-content: center;
-          display: flex;
+          @include flex(row, center, center);
         }
         .list-area {
           margin-left: 10px;
-          flex-direction: row;
-          align-items: center;
-          justify-content: center;
-          display: flex;
+          @include flex(row, center, center);
         }
       }
     }
@@ -445,10 +426,7 @@
   }
 
   .adjust-sound-overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
+    @include flex(column, space-between, center);
     border-radius: 10px;
     width: 75px;
     height: 240px;
@@ -456,10 +434,7 @@
     background-color: #E3E3E3;
 
     .sound-tool-bar-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      @include flex(column, flex-start, center);
       width: 5%;
       height: 70%;
     }
