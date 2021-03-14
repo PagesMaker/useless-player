@@ -11,14 +11,12 @@
     >
       <a-sub-menu key="sub1" @titleClick="titleClick">
         <span slot="title"><span>在线音乐</span></span>
-        <a-menu-item-group key="g1">
           <a-menu-item key="1">
               <a-icon type="customer-service" />音乐馆
           </a-menu-item>
           <a-menu-item key="2">
               <a-icon type="video-camera" />视频
           </a-menu-item>
-        </a-menu-item-group>
       </a-sub-menu>
       <a-sub-menu key="sub2" @titleClick="titleClick">
         <span slot="title"><span>我的音乐</span></span>

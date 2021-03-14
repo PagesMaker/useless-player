@@ -229,15 +229,15 @@
         getSongsDetail(data) {
           this.axios.get(SERVER + `/song/url?id=${data.id}&cookie=${UserInfos.cookie}`).then(res =>{
             console.log(res);
-            data.url = res.data.data[0].url;
+            data = {...data, ...res.data.data[0]};
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data
             })
           });
         },
-        getListDetail() {
-          if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url) {
+        getListDetail(switchList = false) {
+          if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
             this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
@@ -258,8 +258,7 @@
         },
         getSongUrl() {
           this.axios.get(SERVER + `/song/url?id=${this.songs[this.currentSongIdx].id}&cookie=${UserInfos.cookie}`).then(response =>{
-            const data = this.songs[this.currentSongIdx];
-            data.url = response.data.data[0].url;
+            const data = {...this.songs[this.currentSongIdx], ...response.data.data[0]};
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data: data
@@ -270,7 +269,7 @@
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
             this.crtListInfoIdx = i;
-            this.getListDetail();
+            this.getListDetail(true);
           } else {
             this.initCrtListInfo();
           }

@@ -62,7 +62,7 @@
           <i class="anticon">词</i>
         </div>
         <div class="time-area">
-          <span>{{ currentTime  | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
+          <span>{{ currentTime + startTime  | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
         </div>
         <div class="list-area">
           <a-icon type="menu" title=""/>
@@ -71,14 +71,13 @@
     </div>
     <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false"
            @ended="autoSwitchMusic()" @timeupdate="updateCurrentTime()" id="mainPlayer"></audio>
-      <a-modal v-if="musicDetailShow"
-               :visible="true"
+      <a-modal :visible="musicDetailShow"
                :keyboard="true"
                :closable="false"
                :footer="null"
                wrapClassName="music-details"
       >
-        <music-detail @closeMusicDetail="closeMusicDetail()" :songInfo="songInfo" v-if="musicDetailShow" :isPaused="isPaused"></music-detail>
+        <music-detail @closeMusicDetail="closeMusicDetail()" :startTime="startTime" :musicDetailShow="musicDetailShow" :lyric="lyricArr" :time="timeArr" :songInfo="songInfo" :isPaused="isPaused"></music-detail>
       </a-modal>
   </div>
 </template>
@@ -91,6 +90,8 @@
   import {debounceTime, throttleTime} from 'rxjs/operators';
   import processBar from './process-bar';
   import musicDetail from './music-detail';
+  import {SERVER} from "../main";
+  import {UserInfos} from "./service/user-info.service";
   export default {
     name: 'footer-player',
     components: {
@@ -114,7 +115,11 @@
         soundPanelVisible: false,
         init: true,
         musicDetailShow: false,
+        lyric: '',
+        lyricArr: [],
+        timeArr: [],
         pictureHover: false,
+        startTime: 0,
         subscription: [],
         placement: 'topCenter',
         player: {},
@@ -201,6 +206,12 @@
       },
       updateCurrentTime() {
         this.updateTime$.next();
+        // if (this.musicDetailShow) {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.CHANGE_PROCESS,
+            data: this.player.currentTime
+          })
+        // }
       },
       switchPlayStatus() {
         this.player.paused ? this.play() : this.pause();
@@ -211,7 +222,7 @@
         return !this.songInfo.dt ? 0 : this.songInfo.dt / 1000
       },
       process() {
-        const process = (this.currentTime / this.getSongTime) * 100;
+        const process = ((this.currentTime + this.startTime) / this.getSongTime) * 100;
         return isNaN(process) ? 0 : process
       }
     },
@@ -242,11 +253,21 @@
             }
             this.$nextTick(() => {
               this.songInfo = JSON.parse(JSON.stringify(res.data));
+              console.log(this.songInfo);
+              this.axios.get(SERVER + `/lyric?id=${this.songInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
+                this.lyric = '';
+                if (res.data.code === 200 && !res.data.nolyric) {
+                  this.lyric = res.data.lrc.lyric;
+                }
+              });
               this.$nextTick(() => {
                 if (this.player.paused) {
                   // 暂停
                   if (this.songInfo.fee === 1) {
                     this.$message.warning('该歌曲为收费曲目，只能试听15秒');
+                    this.startTime = this.songInfo.freeTrialInfo.start;
+                  } else {
+                    this.startTime = 0
                   }
                   if (!this.init) {
                     this.play();
@@ -275,6 +296,35 @@
       sound: {
         handler(val) {
           this.player.volume = val / 100;
+        }
+      },
+      lyric: {
+        handler(val) {
+          console.log(val, '111');
+          this.lyricArr = [];
+          this.timeArr = [];
+          if (!val) {
+            return;
+          }
+          const temp = val.split('[');
+          temp.shift();
+          const timeArr = [],
+            lyricsArr = [];
+          temp.forEach(item => {
+            item = item.split(']');
+            timeArr.push((+item[0].split(':')[0] * 60 * 1000) + (+item[0].split(':')[1] * 1000));
+            lyricsArr.push(item[1]);
+          });
+          console.log(timeArr, lyricsArr);
+          lyricsArr.unshift('');
+          this.lyricArr = lyricsArr;
+          this.timeArr = timeArr.map((item, index) => {
+            if (index === 0) {
+              return [0, timeArr[0] / 1000];
+            } else {
+              return [timeArr[index - 1] / 1000, item / 1000]
+            }
+          });
         }
       }
     }
