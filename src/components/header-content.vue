@@ -1,9 +1,12 @@
 <template>
   <div>
     <div class="header-content-box">
-      <a-input class="search-music-input" ref="userNameInput" v-model="searchMusic" placeholder="搜索音乐">
-        <a-icon slot="prefix" type="search" />
-      </a-input>
+      <div class="search-music-input-box">
+        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
+          <a-icon slot="prefix" type="search" />
+        </a-input>
+        <search-modal v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
+      </div>
       <div class="user-infos">
         <div v-if="userInfo.isLogin" class="user-infos-box">
           <img class="user-avatar" :src="userInfo.userInfo.avatarUrl" alt="">
@@ -53,18 +56,26 @@
   import {SERVER} from "../main";
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
+  import {Subject} from "rxjs";
+  import searchModal from './search-modal';
+
   export default {
     name: 'header-content',
+    components: {
+      searchModal
+    },
     data() {
       return {
         qr: '',
         qrKey: '',
         searchMusic: '',
+        searchInputSubject$: new Subject(),
         account: Object,
         userInfo: UserInfos,
         visible: false,
         loginProcess: 'loginHome', // 可能的值有 'loginHome', 'loginByQR', 'register'
-        loading: false
+        loading: false,
+        isSearchListingShow: false
       }
     },
     mounted() {
@@ -77,6 +88,9 @@
       }, 500)
     },
     methods: {
+      showSearchListing(e) {
+        this.isSearchListingShow = e;
+      },
       handleOk(e) {
         console.log(e);
       },
@@ -178,17 +192,27 @@
   .header-content-box{
     width: 100%;
     height: 100%;
+    padding: 10px 0;
     @include flex(row, space-between, center);
     /deep/ .anticon.anticon-user{
       font-size:2em;
     }
-    .search-music-input{
+    .search-music-input-box{
+      position: relative;
       width: 24%;
       height: 60%;
       margin-left: 20px;
+    }
+    .search-music-input{
+      width: $max;
+      height: $max;
       /deep/ .ant-input{
         border-radius: 30px;
-        box-shadow: 2px 2px rgba(1,1,1,0.3);
+        background-color: #E3E3E3;
+      }
+      /deep/ .ant-input:focus{
+        border: none;
+        box-shadow: unset;
       }
     }
     .user-infos{

@@ -41,8 +41,9 @@
 
 <script>
     import {bully} from "./service/bully";
-    import {SYSTEM_EVENTS} from "../Const";
-    import {Settings} from "./service/user-info.service";
+    import {APP, SYSTEM_EVENTS} from "../Const";
+    import {fromEvent} from "rxjs";
+    import {throttleTime} from "rxjs/operators";
 
     export default {
       name: "music-detail",
@@ -95,6 +96,14 @@
         }
       },
       mounted() {
+        fromEvent(window, 'resize').pipe(throttleTime(100)).subscribe(() => {
+          const dom = document.getElementsByClassName('lyrics-row')[this.lyricsProcess];
+          this.currentDom = {
+            left: (dom.clientWidth - dom.getElementsByClassName('lyrics-text')[0].clientWidth) / 2,
+            text: dom.getElementsByClassName('lyrics-text')[0].clientWidth,
+            max: dom.clientWidth
+          };
+        });
         const sub = bully.getMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.CHANGE_PROCESS) {
             this.changeLyricsProcess(res.data);
@@ -138,7 +147,7 @@
           }
         },
         songInfo: {
-          handler(val) {
+          handler() {
             this.init();
           }
         }

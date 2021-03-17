@@ -353,7 +353,7 @@
 
     .song-area {
       @include flex(row, space-between, center);
-      height: 60px;
+      height: calc(100% - 3px);
       padding: 5px 20px;
       width: $max;
 

@@ -24,6 +24,7 @@ export default {
   .main-content{
     width: $max;
     height: $max;
+    overflow: hidden;
     display: flex;
     flex-direction: row;
     background: $white;
