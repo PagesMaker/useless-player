@@ -23,6 +23,9 @@ Vue.filter('timeFormat', function (value, format = '') {
   }
   return moment({minute: Math.floor(value / 60), second: value % 60}).format(format);
 })
+Vue.filter('tenThousands', function (value) {
+  return Math.floor(value / 1e4) + '万';
+})
 
 new Vue({
 	el: '#app',

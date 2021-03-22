@@ -41,7 +41,7 @@
 
 <script>
     import {bully} from "./service/bully";
-    import {APP, SYSTEM_EVENTS} from "../Const";
+    import {SYSTEM_EVENTS} from "../Const";
     import {fromEvent} from "rxjs";
     import {throttleTime} from "rxjs/operators";
 
@@ -282,7 +282,7 @@
       filter: blur(8px);
       width: $max;
       height: $max;
-      z-index: 1000;
+      z-index: $z1e3;
       opacity: 0.35;
       background-repeat: no-repeat;
       background-size: $max,$max;

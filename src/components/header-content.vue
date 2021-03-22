@@ -2,10 +2,10 @@
   <div>
     <div class="header-content-box">
       <div class="search-music-input-box">
-        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
+        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
           <a-icon slot="prefix" type="search" />
         </a-input>
-        <search-modal v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
+        <search-modal @searchValueChangeByClick="searchMusic = $event" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
       </div>
       <div class="user-infos">
         <div v-if="userInfo.isLogin" class="user-infos-box">
@@ -58,6 +58,7 @@
   import {SYSTEM_EVENTS} from "../Const";
   import {Subject} from "rxjs";
   import searchModal from './search-modal';
+  import {debounceTime} from "rxjs/operators";
 
   export default {
     name: 'header-content',
@@ -85,7 +86,7 @@
           UserInfos.isLogin = true;
           this.getLoginStatus();
         }
-      }, 500)
+      }, 500);
     },
     methods: {
       showSearchListing(e) {

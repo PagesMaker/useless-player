@@ -336,7 +336,7 @@
     position: fixed;
     left: 0;
     bottom: 0;
-    z-index: 10000;
+    z-index: $z1e4;
   }
   .footer-player-content-box {
     width: $max;
@@ -474,7 +474,9 @@
     top: 0;
     left: 0;
   }
-
+  .adjust-sound-overlay-content{
+    z-index: $z1e7;
+  }
   .adjust-sound-overlay {
     @include flex(column, space-between, center);
     border-radius: 10px;
