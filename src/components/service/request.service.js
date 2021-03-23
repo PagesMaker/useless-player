@@ -11,11 +11,8 @@ const defaultConfig = {
   baseURL: SERVER
 };
 class HttpClientService {
-  subscriptions = [];
   get(url, config) {
     const subject = new Subject();
-    const len = this.subscriptions.length;
-    this.subscriptions[len] = subject;
     config = {
       ...defaultConfig,
       ...config
@@ -25,16 +22,11 @@ class HttpClientService {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);
-    }).finally(() => {
-      this.subscriptions.splice(len, 1);
-      console.log(this.subscriptions);
-    });
+    })
     return subject.asObservable();
   }
   post(url, body, config = defaultConfig) {
     const subject = new Subject();
-    const len = this.subscriptions.length;
-    this.subscriptions[len] = subject;
     config = {
       ...defaultConfig,
       ...config
@@ -44,10 +36,7 @@ class HttpClientService {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);
-    }).finally(() => {
-      this.subscriptions.splice(len, 1);
-      console.log(this.subscriptions);
-    });
+    })
     return subject.asObservable();
   }
 }
