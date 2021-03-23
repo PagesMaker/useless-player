@@ -35,11 +35,8 @@
 </template>
 
 <script>
-    import {SERVER} from "../main";
-    import {UserInfos} from "./service/user-info.service";
     import {debounceTime} from "rxjs/operators";
     import {Subject} from "rxjs";
-    import {HTTPClient} from "./service/request.service";
     import {searchService} from "./service/search.service";
 
     export default {
@@ -69,12 +66,15 @@
         },
         searchByClick(value) {
           this.$emit('searchValueChangeByClick', value);
-          this.search();
+          this.search(value);
         },
-        search() {
-          // /search?keywords
-          searchService.getSearchByKeywords(this.searchValue).subscribe(res => {
+        search(value) {
+          searchService.getSearchByKeywords(value).subscribe(res => {
             console.log(res);
+
+          }, error => {
+            console.log(error);
+            this.$message.error('网络错误');
           })
         },
         getHotMusicList(type) {
@@ -84,16 +84,16 @@
           if (type === 'detail') {
             searchBy += '/' + type;
           }
-          this.axios.get(SERVER + `/search/hot${searchBy}?cookie=${UserInfos.cookie}`).then(res =>{
+          searchService.getHotSearchList(searchBy).subscribe(res => {
             console.log(res);
             this.isLoading = false;
-            if (res.data.code === 200) {
-              this.searchList = res.data.data || [];
+            if (res.code === 200) {
+              this.searchList = res.data || [];
               this.searchList.length >= 10 && (this.searchList.length = 10);
               console.log(this.searchList);
             }
-          }, err => {
-            console.log(err);
+          }, error => {
+            console.log(error);
             this.isLoading = false;
             this.$message.error('获取热搜列表失败');
           })

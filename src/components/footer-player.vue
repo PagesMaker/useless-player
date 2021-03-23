@@ -90,8 +90,8 @@
   import {debounceTime, throttleTime} from 'rxjs/operators';
   import processBar from './process-bar';
   import musicDetail from './music-detail';
-  import {SERVER} from "../main";
   import {UserInfos} from "./service/user-info.service";
+  import {songInfoService} from "./service/song-info.service";
   export default {
     name: 'footer-player',
     components: {
@@ -254,10 +254,10 @@
             this.$nextTick(() => {
               this.songInfo = JSON.parse(JSON.stringify(res.data));
               console.log(this.songInfo);
-              this.axios.get(SERVER + `/lyric?id=${this.songInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
+              songInfoService.getLyricsById(this.songInfo.id).subscribe(res => {
                 this.lyric = '';
-                if (res.data.code === 200 && !res.data.nolyric) {
-                  this.lyric = res.data.lrc.lyric;
+                if (res.code === 200 && !res.nolyric) {
+                  this.lyric = res.lrc.lyric;
                 }
               });
               this.$nextTick(() => {

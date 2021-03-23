@@ -53,12 +53,10 @@
 
 <script>
   import {UserInfos} from './service/user-info.service';
-  import {SERVER} from "../main";
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
   import {Subject} from "rxjs";
   import searchModal from './search-modal';
-  import {debounceTime} from "rxjs/operators";
 
   export default {
     name: 'header-content',
@@ -105,14 +103,14 @@
         this.visible = true;
       },
       getQR() {
-        this.axios.get( SERVER + `/login/qr/key?timerstamp=${new Date().getTime()}`).then(res => {
-          if (res.data && res.data.data && res.data.data.code === 200) {
-            this.qrKey = res.data.data.unikey;
-            this.axios.get( SERVER + `/login/qr/create?key=${res.data.data.unikey}&qrimg=true&timerstamp=${new Date().getTime()}`).then(response => {
+        UserInfos.loginByQr(new Date().getTime()).subscribe(res => {
+          if (res && res.code === 200) {
+            this.qrKey = res.data.unikey;
+            UserInfos.createQr(res.data.unikey, new Date().getTime()).subscribe(response => {
               console.log(response);
               const resp = response.data;
-              if (resp && resp.data) {
-                this.qr = resp.data.qrimg;
+              if (resp) {
+                this.qr = resp.qrimg;
                 this.setQRInterval();
               }
             }, () => {
@@ -128,54 +126,60 @@
           return;
         }
         this.intervalOfGetQR = setInterval(() => {
-          this.axios.get( SERVER + `/login/qr/check?key=${this.qrKey}&timerstamp=${new Date().getTime()}`).then(res => {
-            if (res.data && res.data.code === 800) {
-              this.getQR();
-              clearInterval(this.intervalOfGetQR);
-            } else if (res.data && res.data.code === 801) {
-              // 等待扫码
-            } else if (res.data && res.data.code === 802) {
-              // 等待确认
-            } else if (res.data && res.data.code === 803) {
-              // 扫码成功
-              UserInfos.isLogin = true;
-              UserInfos.cookie = res.data.cookie;
-              res.data.cookie.split(';;').forEach(item => {
-                item = item.split('HTTPOnly')[0];
-                document.cookie = item;
-              })
-              // 需要将cookie保存并且设置到浏览器
-              this.getLoginStatus();
-              this.handleCancel();
-            }
-          }, () => {});
+            UserInfos.setQrInterval(this.qrKey, new Date().getTime()).subscribe(res => {
+              if (res && res.code === 800) {
+                this.getQR();
+                clearInterval(this.intervalOfGetQR);
+              } else if (res && res.code === 801) {
+                // 等待扫码
+              } else if (res && res.code === 802) {
+                // 等待确认
+              } else if (res && res.code === 803) {
+                // 扫码成功
+                UserInfos.isLogin = true;
+                UserInfos.cookie = res.cookie;
+                res.cookie.split(';;').forEach(item => {
+                  item = item.split('HTTPOnly')[0];
+                  document.cookie = item;
+                })
+                // 需要将cookie保存并且设置到浏览器
+                this.getLoginStatus();
+                this.handleCancel();
+              }
+            });
         }, 1000);
       },
       getLoginStatus() {
-        this.axios.post( SERVER + `/user/account`,  {cookie: UserInfos.cookie}).then(res => {
+        UserInfos.getUserAccount().subscribe(res => {
           console.log(res);
-          if (res.data.code === 200) {
-            this.account = res.data.account;
-            UserInfos.userInfo = res.data.profile;
-            this.userInfo = UserInfos;
-            this.axios.post( SERVER + `/user/detail?uid=${res.data.account.id}`,  {cookie: UserInfos.cookie}).then(res => {
-              console.log(res);
-              if (res.data.code === 200) {
-                console.log(res);
-              }
-            });
-            bully.setMessage({
-              type: SYSTEM_EVENTS.GET_USER_ID,
-              data: res.data.account
-            });
+          if (res.code === 200) {
+            if ( res.account ){
+              this.account = res.account;
+              UserInfos.userInfo = res.profile;
+              this.userInfo = UserInfos;
+              UserInfos.getUserDetail(res.account.id).subscribe(resp => {
+                if (resp.code === 200) {
+                  console.log(resp);
+                }
+              });
+              bully.setMessage({
+                type: SYSTEM_EVENTS.GET_USER_ID,
+                data: res.account
+              });
+            } else {
+              UserInfos.isLogin = false;
+              UserInfos.cookie = '';
+            }
           }
+        }, () => {
+          this.$message.error('获取用户信息失败');
         });
-        this.axios.post( SERVER + `/user/subcount`,  {cookie: UserInfos.cookie}).then(res => {
+        UserInfos.getUserSubcount().subscribe(res => {
           console.log(res);
-          if (res.data.code === 200) {
+          if (res.code === 200) {
             console.log(res);
           }
-        });
+        })
       },
       changeLoginProcess(e) {
         this.loginProcess = e;

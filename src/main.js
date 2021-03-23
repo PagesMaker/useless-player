@@ -11,8 +11,6 @@ import Rx from 'rxjs/Rx'
 import VueAxios from 'vue-axios';
 import VueRx from "vue-rx";
 
-const config = require('../config');
-
 Vue.use(Antd);
 Vue.use(VueAxios, axios);
 Vue.use(VueRx, Rx);
@@ -34,4 +32,3 @@ new Vue({
 	template: '<App/>',
 	render: h => h(App)
 }).$mount('#app');
-export const SERVER = location.href.includes('localhost') ? config.dev.server : '';

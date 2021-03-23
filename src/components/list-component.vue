@@ -89,8 +89,8 @@
 <script>
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
-  import {SERVER} from "../main";
   import {UserInfos} from "./service/user-info.service";
+  import {songInfoService} from "./service/song-info.service";
 
   /*const renderContent = (value, row, index) => {
     const obj = {
@@ -192,22 +192,19 @@
           return data.map(item => item.name).join(' / ')
         },
         getListInfo(data) {
-          this.axios.post(SERVER + `/user/playlist`, {
-            cookie: UserInfos.cookie,
-            uid: data.id
-          }).then(res => {
+          songInfoService.getUserPlaylist(data.id).subscribe(res => {
             console.log(res);
-            if (res.data.code === 200) {
-              this.listInfo = res.data.playlist;
+            if (res.code === 200) {
+              this.listInfo = res.playlist;
               bully.setMessage({
                 type: SYSTEM_EVENTS.SYNC_LIST,
                 data: this.listInfo
               })
               this.setCrtList(0);
             }
-          }, err => {
-            console.log(err);
-          })
+          }, () => {
+            this.$message.error('获取用户歌单失败');
+          });
         },
         setRowBehaviour(data) {
           return {
@@ -227,9 +224,9 @@
           };
         },
         getSongsDetail(data) {
-          this.axios.get(SERVER + `/song/url?id=${data.id}&cookie=${UserInfos.cookie}`).then(res =>{
+          songInfoService.getSongDetail(data.id).subscribe(res => {
             console.log(res);
-            data = {...data, ...res.data.data[0]};
+            data = {...data, ...res.data[0]};
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data
@@ -240,29 +237,33 @@
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
-            this.axios.get(SERVER + `/playlist/detail?id=${this.crtListInfo.id}&cookie=${UserInfos.cookie}`).then(res =>{
-              console.log(res);
-              res.data.playlist.tracks.forEach(item => {
-                item.rowName = {
-                  name: item.name,
-                  hover: false
-                }
-              });
-              this.songs = res.data.playlist.tracks;
-              console.log(this.songs);
-              this.getSongUrl();
-            }, err => {
-              console.log(err);
-            })
+            songInfoService.getUserPlaylistDetail(this.crtListInfo.id).subscribe(res => {
+              if (res.code === 200) {
+                console.log(res);
+                res.playlist.tracks.forEach(item => {
+                  item.rowName = {
+                    name: item.name,
+                    hover: false
+                  }
+                });
+                this.songs = res.playlist.tracks;
+                console.log(this.songs);
+                this.getSongUrl();
+              }
+            }, () => {
+              this.$message.error('获取歌单详情失败')
+            });
           }
         },
         getSongUrl() {
-          this.axios.get(SERVER + `/song/url?id=${this.songs[this.currentSongIdx].id}&cookie=${UserInfos.cookie}`).then(response =>{
-            const data = {...this.songs[this.currentSongIdx], ...response.data.data[0]};
+          songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {
+            const data = {...this.songs[this.currentSongIdx], ...res.data[0]};
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data: data
             })
+          }, () => {
+            this.$message.error('获取歌区详情失败')
           });
         },
         setCrtList(i) {
