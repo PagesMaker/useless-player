@@ -7,5 +7,8 @@ class SearchService {
   getHotSearchList(searchBy) {
     return HTTPClient.get(`/search/hot${searchBy}`);
   }
+  getSearchAdvice(value) {
+    return HTTPClient.get(`/search/suggest?keywords=${value}`);
+  }
 }
 export const searchService = new SearchService();

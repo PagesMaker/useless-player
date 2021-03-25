@@ -2,7 +2,7 @@
   <div>
     <div class="header-content-box">
       <div class="search-music-input-box">
-        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
+        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @keypress.enter="searchKeywords($event)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
           <a-icon slot="prefix" type="search" />
         </a-input>
         <search-modal @searchValueChangeByClick="searchMusic = $event" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
@@ -120,6 +120,11 @@
         }, () => {
           this.$message.error('获取登录二维码失败，请刷新后再试');
         });
+      },
+      searchKeywords() {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.SEARCH_KEYWORDS
+        })
       },
       setQRInterval() {
         if (this.loginProcess !== 'loginByQR') {
