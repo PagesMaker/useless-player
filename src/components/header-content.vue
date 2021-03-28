@@ -5,7 +5,7 @@
         <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @keypress.enter="searchKeywords($event)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
           <a-icon slot="prefix" type="search" />
         </a-input>
-        <search-modal @searchValueChangeByClick="searchMusic = $event" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
+        <search-modal @searchValueChangeByClick="searchValueChangeByClick($event)" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
       </div>
       <div class="user-infos">
         <div v-if="userInfo.isLogin" class="user-infos-box">
@@ -95,6 +95,10 @@
       },
       gotoUserPage() {
       },
+      searchValueChangeByClick(e) {
+        this.searchMusic = e;
+        this.searchKeywords();
+      },
       handleCancel() {
         this.visible = false;
         this.changeLoginProcess('loginHome');
@@ -122,9 +126,11 @@
         });
       },
       searchKeywords() {
-        bully.setMessage({
+        /*bully.setMessage({
           type: SYSTEM_EVENTS.SEARCH_KEYWORDS
-        })
+        })*/
+        this.showSearchListing(false);
+        // this.$router.go()
       },
       setQRInterval() {
         if (this.loginProcess !== 'loginByQR') {

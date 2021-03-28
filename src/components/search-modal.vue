@@ -36,7 +36,55 @@
       </div>
     </div>
     <div class="search-wrapper" v-else>
+      <div class="online-music">
+        <div class="search-header"><span>在线音乐</span></div>
+        <div class="search-advice-listing">
+          <div class="search-advice-content">
+            <div class="sa-menu" v-for="(item, idx) in searchAdviceListOrder">
+              <div class="sa-left">
+                <span v-if="item === 'songs'">单曲</span>
+                <span v-if="item === 'artists'">歌手</span>
+                <span v-if="item === 'albums'">专辑</span>
+                <span v-if="item === 'playlists'">歌单</span>
+              </div>
+              <div class="sa-right">
+                <ul class="sa-listing">
+                  <li class="sa-list-items" v-for="subItem in searchAdviceList[idx][item]">
+                    <div v-if="item === 'albums' || item === 'playlists' || item === 'artists'" class="img-box">
+                      <img :src="subItem.imageUrl" alt="" draggable="false">
+                    </div>
+                    <span v-for="font in subItem.splitedName"
+                          v-if="item === 'songs' || item === 'albums' || item === 'playlists'"
+                          :style="{'color': searchValue.includes(font) ? 'red' : 'black'}"
+                    >
+                      {{font}}
+                    </span>
+                    <span v-if="item === 'songs' || item === 'albums'">&nbsp;-&nbsp;</span>
+                    <span v-for="font in subItem.splitedSingerName"
+                          v-if="item === 'songs' || item === 'albums' || item === 'artists'"
+                          :style="{'color': searchValue.includes(font) ? 'red' : 'black'}"
+                    >
+                      {{font}}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!--<div class="sa-artists" v-else-if="item === 'artists'">
+              <div class="sa-left"><span>单曲</span></div>
+            </div>
+            <div class="sa-albums" v-else-if="item === 'albums'">
 
+            </div>
+            <div class="sa-playlists" v-else-if="item === 'playlists'">
+
+            </div>-->
+          </div>
+          <div class="no-search-advice" v-if="searchAdviceList.length === 0 && !isSearching">
+            <a-empty description="没有搜索到相关内容"></a-empty>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -53,7 +101,8 @@
     data() {
       return {
         searchList: [],
-        historyList: [{searchWord: 2121}],
+        historyList: [],
+        isSearching: false,
         isLoading: false,
         subscription$: [],
         searchAdviceList: [],
@@ -72,20 +121,53 @@
         }
       })
       this.subscription$.push(sub, sub2);
+      if (this.searchValue.length) {
+        this.getSearchAdvice();
+      }
     },
     methods: {
       getSearchAdvice() {
+        if (this.searchValue === '') {
+          return
+        }
+        this.isSearching = true;
         searchService.getSearchAdvice(this.searchValue).subscribe(res => {
           console.log(res);
+          this.isSearching = false;
           if (res.code === 200) {
             const data = res.result;
             this.searchAdviceList = [];
+            this.searchAdviceListOrder = [];
+            if (Object.keys(data).length === 0) {
+              return;
+            }
             data.order.forEach((item, index) => {
+              data[item].forEach(sub => {
+                if (item === 'songs') {
+                  sub.name && (sub.splitedName = sub.name.split(''));
+                  sub.singerNameList = '';
+                  sub.artists.map(item => sub.singerNameList += item.name + (sub.artists.indexOf(item) === sub.artists.length - 1 ? '' : '/ '));
+                  sub.splitedSingerName = sub.singerNameList.split('');
+                } else if (item === 'artists') {
+                  sub.name && (sub.splitedSingerName = sub.name.split(''));
+                  sub.imageUrl = sub.picUrl;
+                } else if (item === 'playlists') {
+                  sub.name && (sub.splitedName = sub.name.split(''));
+                  sub.imageUrl = sub.coverImgUrl;
+                } else if (item === 'albums') {
+                  sub.name && (sub.splitedName = sub.name.split(''));
+                  sub.singerNameList = sub.artist.name;
+                  sub.splitedSingerName = sub.singerNameList.split('');
+                  sub.imageUrl = sub.artist.picUrl
+                }
+              });
               this.searchAdviceList[index] = {};
               this.searchAdviceList[index][item] = data[item];
             });
             this.searchAdviceListOrder = data.order;
           }
+        }, error => {
+          this.isSearching = false;
         });
       },
       searchValueChange() {
@@ -138,6 +220,8 @@
           this.searchSubject$.next();
         }
       }
+    },
+    computed: {
     }
   }
 </script>
@@ -151,14 +235,17 @@
       position: absolute;
       top: 40px;
       width: 600px;
-      padding: 2px 14px;
-      height: 450px;
+      padding: 10px 14px;
+      height: auto;
+      max-height: 1000px;
       color: black;
       background-color: white;
       border-radius: 5px;
       z-index: $z1e4;
       box-shadow: 0 0 10px 0 rgb(10, 10, 10);
-
+      ul{
+        margin: 0;
+      }
       .hot-search, .search-history {
         width: 50%;
         height: $max;
@@ -168,7 +255,7 @@
           @include flex(row, space-between, center);
           height: 10%;
           width: $max;
-          padding: 0 16px;
+          padding: 0 16px 10px 16px;
           font-size: 16px;
 
           .search-clear {
@@ -222,6 +309,47 @@
       .search-history .search-list-box {
         border-top: $grayBorder;
         border-left: $grayBorder;
+      }
+
+      .online-music{
+        width: 100%;
+        font-size: 16px;
+        img{
+          width: 30px;
+          height: 30px;
+        }
+        .search-header{
+          padding: 0 0 10px 0;
+          border-bottom: 1px solid #EEEEEE;
+        }
+        .search-advice-listing {
+          width: 100%;
+          @include flex(row, center, center);
+          padding: 0 18px;
+          font-size: 14px;
+          .search-advice-content{
+            width: 100%;
+            @include flex(column, flex-start, center);
+            .sa-menu{
+              width: 100%;
+              @include flex(row, flex-start, flex-start);
+              .sa-left{
+                padding: 4px 14px 0 0;
+                white-space: nowrap;
+              }
+              .sa-right{
+                width: 100%;
+                .sa-listing{
+                  @include flex(column, flex-start, flex-start);
+                  .sa-list-items{
+                    @include flex(row, flex-start, center);
+                    white-space: nowrap;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
