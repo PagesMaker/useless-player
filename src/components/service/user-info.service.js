@@ -2,9 +2,29 @@ import {HTTPClient} from "./request.service";
 
 
 class UserInfoService{
-  userInfo = {userName : ''};
+  userInfo = {nickName : ''};
   isLogin = false;
   cookie = '';
+  localData = {
+    searchHistory: []
+  };
+  setLocalData() {
+    if (!this.userInfo.userId) {
+     return;
+    }
+    localStorage.setItem(this.userInfo.userId,  JSON.stringify(this.localData || {
+      searchHistory: []
+    }
+    ));
+  }
+  getLocalData() {
+    if (!this.userInfo.userId) {
+      return;
+    }
+    this.localData = JSON.parse(localStorage.getItem(this.userInfo.userId)) || {
+      searchHistory: []
+    };
+  }
   loginByQr(time) {
     return HTTPClient.get(`/login/qr/key?timerstamp=${time}`, {withCredentials: false});
   }

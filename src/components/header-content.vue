@@ -2,7 +2,7 @@
   <div>
     <div class="header-content-box">
       <div class="search-music-input-box">
-        <a-input class="search-music-input" ref="userNameInput" @focus="showSearchListing(true)" @keypress.enter="searchKeywords($event)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
+        <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords($event)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
           <a-icon slot="prefix" type="search" />
         </a-input>
         <search-modal @searchValueChangeByClick="searchValueChangeByClick($event)" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
@@ -55,8 +55,9 @@
   import {UserInfos} from './service/user-info.service';
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
-  import {Subject} from "rxjs";
+  import {fromEvent, Subject} from "rxjs";
   import searchModal from './search-modal';
+  import {searchService} from "./service/search.service";
 
   export default {
     name: 'header-content',
@@ -85,6 +86,9 @@
           this.getLoginStatus();
         }
       }, 500);
+      fromEvent(window, 'beforeunload').subscribe(() => {
+        UserInfos.setLocalData();
+      })
     },
     methods: {
       showSearchListing(e) {
@@ -129,6 +133,13 @@
         /*bully.setMessage({
           type: SYSTEM_EVENTS.SEARCH_KEYWORDS
         })*/
+        searchService.getSearchByKeywords(this.searchMusic).subscribe(res => {
+          console.log(res);
+
+        }, error => {
+          console.log(error);
+          this.$message.error('网络错误');
+        })
         this.showSearchListing(false);
         // this.$router.go()
       },
@@ -164,7 +175,7 @@
         UserInfos.getUserAccount().subscribe(res => {
           console.log(res);
           if (res.code === 200) {
-            if ( res.account ){
+            if (res.account){
               this.account = res.account;
               UserInfos.userInfo = res.profile;
               this.userInfo = UserInfos;
@@ -177,6 +188,7 @@
                 type: SYSTEM_EVENTS.GET_USER_ID,
                 data: res.account
               });
+              UserInfos.getLocalData();
             } else {
               UserInfos.isLogin = false;
               UserInfos.cookie = '';

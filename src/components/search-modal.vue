@@ -20,13 +20,13 @@
       <div class="search-history">
         <div class="search-title">
           <span>搜索历史</span>
-          <span class="search-clear">清空</span>
+          <span class="search-clear" @click="clearSearchHistory()">清空</span>
         </div>
         <div class="search-list-box">
           <ul class="search-list">
-            <li class="search-list-item" @click="searchByClick(item.searchWord)" v-for="item in historyList"
-                :title="item.content">
-              <span class="search-word">{{item.searchWord}}</span>
+            <li class="search-list-item" @click="searchByClick(item)" v-for="item in historyList"
+                :title="item">
+              <span class="search-word">{{item}}</span>
               <span>
 <!--                  placeholder-->
                 </span>
@@ -39,7 +39,7 @@
       <div class="online-music">
         <div class="search-header"><span>在线音乐</span></div>
         <div class="search-advice-listing">
-          <div class="search-advice-content">
+          <div class="search-advice-content" v-if="searchAdviceListOrder.length">
             <div class="sa-menu" v-for="(item, idx) in searchAdviceListOrder">
               <div class="sa-left">
                 <span v-if="item === 'songs'">单曲</span>
@@ -49,7 +49,7 @@
               </div>
               <div class="sa-right">
                 <ul class="sa-listing">
-                  <li class="sa-list-items" v-for="subItem in searchAdviceList[idx][item]">
+                  <li class="sa-list-items" :title="subItem.description || subItem.name" @click="searchByClick(subItem.name)" v-for="subItem in searchAdviceList[idx][item]">
                     <div v-if="item === 'albums' || item === 'playlists' || item === 'artists'" class="img-box">
                       <img :src="subItem.imageUrl" alt="" draggable="false">
                     </div>
@@ -95,6 +95,7 @@
   import {searchService} from "./service/search.service";
   import {SYSTEM_EVENTS} from "../Const";
   import {bully} from "./service/bully";
+  import {UserInfos} from "./service/user-info.service";
 
   export default {
     name: "search-modal",
@@ -107,7 +108,8 @@
         subscription$: [],
         searchAdviceList: [],
         searchAdviceListOrder: [],
-        searchSubject$: new Subject()
+        searchSubject$: new Subject(),
+        clearedSearchValue: false
       }
     },
     mounted() {
@@ -117,27 +119,30 @@
       });
       const sub2 = bully.getMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
-          this.search(this.searchValue);
+          this.$emit('searchValueChangeByClick', this.searchValue);
         }
       })
       this.subscription$.push(sub, sub2);
       if (this.searchValue.length) {
         this.getSearchAdvice();
       }
+      this.historyList = UserInfos.localData.searchHistory;
     },
     methods: {
       getSearchAdvice() {
         if (this.searchValue === '') {
+          this.clearedSearchValue = true;
           return
         }
+        this.clearedSearchValue = false;
         this.isSearching = true;
         searchService.getSearchAdvice(this.searchValue).subscribe(res => {
           console.log(res);
           this.isSearching = false;
+          this.searchAdviceList = [];
+          this.searchAdviceListOrder = [];
           if (res.code === 200) {
             const data = res.result;
-            this.searchAdviceList = [];
-            this.searchAdviceListOrder = [];
             if (Object.keys(data).length === 0) {
               return;
             }
@@ -150,7 +155,7 @@
                   sub.splitedSingerName = sub.singerNameList.split('');
                 } else if (item === 'artists') {
                   sub.name && (sub.splitedSingerName = sub.name.split(''));
-                  sub.imageUrl = sub.picUrl;
+                  sub.imageUrl = sub.picUrl || sub.img1v1Url;
                 } else if (item === 'playlists') {
                   sub.name && (sub.splitedName = sub.name.split(''));
                   sub.imageUrl = sub.coverImgUrl;
@@ -158,7 +163,7 @@
                   sub.name && (sub.splitedName = sub.name.split(''));
                   sub.singerNameList = sub.artist.name;
                   sub.splitedSingerName = sub.singerNameList.split('');
-                  sub.imageUrl = sub.artist.picUrl
+                  sub.imageUrl = sub.artist.picUrl || sub.artist.img1v1Url;
                 }
               });
               this.searchAdviceList[index] = {};
@@ -170,21 +175,18 @@
           this.isSearching = false;
         });
       },
-      searchValueChange() {
-        this.searchSubject$.next();
-      },
       searchByClick(value) {
         this.$emit('searchValueChangeByClick', value);
-        this.search(value);
+        if (!UserInfos.localData.searchHistory.includes(value)) {
+          UserInfos.localData.searchHistory.push(value);
+          if (UserInfos.localData.searchHistory.length >= 10) {
+            UserInfos.localData.searchHistory.shift();
+          }
+          this.historyList = UserInfos.localData.searchHistory;
+        }
       },
-      search(value) {
-        searchService.getSearchByKeywords(value).subscribe(res => {
-          console.log(res);
-
-        }, error => {
-          console.log(error);
-          this.$message.error('网络错误');
-        })
+      clearSearchHistory() {
+        this.historyList = UserInfos.localData.searchHistory = [];
       },
       getHotMusicList(type) {
         this.isLoading = true;
@@ -218,6 +220,10 @@
       searchValue: {
         handler() {
           this.searchSubject$.next();
+          if (this.clearedSearchValue) {
+            this.searchAdviceList = [];
+            this.searchAdviceListOrder = [];
+          }
         }
       }
     },
@@ -334,7 +340,7 @@
               width: 100%;
               @include flex(row, flex-start, flex-start);
               .sa-left{
-                padding: 4px 14px 0 0;
+                padding: 11px 14px 0 0;
                 white-space: nowrap;
               }
               .sa-right{
@@ -342,8 +348,20 @@
                 .sa-listing{
                   @include flex(column, flex-start, flex-start);
                   .sa-list-items{
+                    width: 100%;
                     @include flex(row, flex-start, center);
+                    padding: 7px 0;
                     white-space: nowrap;
+                    .img-box{
+                      padding-right: 4px;
+                      img{
+                        border-radius: 30px;
+                      }
+                    }
+                  }
+                  .sa-list-items:hover{
+                    background-color: #E6F7FF;
+                    cursor: pointer;
                   }
                 }
               }
