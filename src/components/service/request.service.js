@@ -12,30 +12,39 @@ class HttpClientService {
     observerBody: true,
     baseURL: SERVER
   };
-  getCookie(url, withCredentials) {
+  getCookie(url, config) {
+    let timeStamp;
+    if (config.withTimeStamp) {
+      timeStamp = `${new Date().getTime()}`;
+      delete config.withTimeStamp;
+    }
     const symbol = url.includes('?') ? '&' : '?';
-    return UserInfos.cookie === '' || !withCredentials ? '' : `${symbol}cookie=${UserInfos.cookie}`;
+    let urlStr = UserInfos.cookie === '' || !config.withCredentials ? '' : `${symbol}cookie=${UserInfos.cookie}`;
+    if (timeStamp) {
+      urlStr += urlStr.includes('?') ? '&timeStamp=' + timeStamp : '?timeStamp=' + timeStamp
+    }
+    return urlStr;
   }
-  get(url, config) {
+  get(url, config = {}) {
     const subject = new Subject();
     config = {
       ...this.defaultConfig,
       ...config
     };
-    axios.get(`${url}${this.getCookie(url, config.withCredentials)}`, config).then(res => {
+    axios.get(`${url}${this.getCookie(url, config)}`, config).then(res => {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);
     })
     return subject.asObservable();
   }
-  post(url, body, config = this.defaultConfig) {
+  post(url, body, config = {}) {
     const subject = new Subject();
     config = {
       ...this.defaultConfig,
       ...config
     };
-    axios.post(`${url}${this.getCookie(url, config.withCredentials)}`, body, config).then(res => {
+    axios.post(`${url}${this.getCookie(url, config)}`, body, config).then(res => {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);

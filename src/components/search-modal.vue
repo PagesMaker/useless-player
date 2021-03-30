@@ -49,7 +49,7 @@
               </div>
               <div class="sa-right">
                 <ul class="sa-listing">
-                  <li class="sa-list-items" :title="subItem.description || subItem.name" @click="searchByClick(subItem.name)" v-for="subItem in searchAdviceList[idx][item]">
+                  <li class="sa-list-items" :title="subItem.description || subItem.name" @click="searchByClick(getSearchData(subItem, searchAdviceListOrder[idx]), searchAdviceListOrder[idx])" v-for="subItem in searchAdviceList[idx][item]">
                     <div v-if="item === 'albums' || item === 'playlists' || item === 'artists'" class="img-box">
                       <img :src="subItem.imageUrl" alt="" draggable="false">
                     </div>
@@ -118,9 +118,10 @@
         this.getSearchAdvice();
       });
       const sub2 = bully.getMessage().subscribe(res => {
-        if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
+        /*if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
           this.$emit('searchValueChangeByClick', this.searchValue);
-        }
+        }*/
+        // 暂时用不到
       })
       this.subscription$.push(sub, sub2);
       if (this.searchValue.length) {
@@ -129,6 +130,12 @@
       this.historyList = UserInfos.localData.searchHistory;
     },
     methods: {
+      getSearchData(data, type) {
+        if (type === 'artists') {
+          return data.name
+        }
+        return data.splitedSingerName ? `${data.name} ${data.singerNameList}` : data.name
+      },
       getSearchAdvice() {
         if (this.searchValue === '') {
           this.clearedSearchValue = true;
@@ -175,8 +182,12 @@
           this.isSearching = false;
         });
       },
-      searchByClick(value) {
-        this.$emit('searchValueChangeByClick', value);
+      searchByClick(value, data) {
+        console.log(searchService.searchEnum[data]);
+        this.$emit('searchValueChangeByClick', {
+          data: value,
+          type: searchService.searchEnum[data]
+        });
         if (!UserInfos.localData.searchHistory.includes(value)) {
           UserInfos.localData.searchHistory.push(value);
           if (UserInfos.localData.searchHistory.length >= 10) {

@@ -177,7 +177,12 @@
             }
           }
         });
-        this.subscription.push(sub);
+        const subR = bully.getRMessage().subscribe(res => {
+          if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
+            console.log(res.data);
+          }
+        })
+        this.subscription.push(sub, subR);
       },
       destroyed() {
         for (const ite of this.subscription) {

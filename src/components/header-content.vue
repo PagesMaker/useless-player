@@ -2,7 +2,7 @@
   <div>
     <div class="header-content-box">
       <div class="search-music-input-box">
-        <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords($event)" @blur="" v-model="searchMusic" placeholder="搜索音乐">
+        <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords(searchMusic)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
           <a-icon slot="prefix" type="search" />
         </a-input>
         <search-modal @searchValueChangeByClick="searchValueChangeByClick($event)" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
@@ -55,7 +55,7 @@
   import {UserInfos} from './service/user-info.service';
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
-  import {fromEvent, Subject} from "rxjs";
+  import {fromEvent, interval, Subject} from "rxjs";
   import searchModal from './search-modal';
   import {searchService} from "./service/search.service";
 
@@ -68,8 +68,11 @@
       return {
         qr: '',
         qrKey: '',
+        currentSearchData: {},
         searchMusic: '',
         searchInputSubject$: new Subject(),
+        inSearchInterval: false,
+        searchInterval$: null,
         account: Object,
         userInfo: UserInfos,
         visible: false,
@@ -88,7 +91,10 @@
       }, 500);
       fromEvent(window, 'beforeunload').subscribe(() => {
         UserInfos.setLocalData();
-      })
+      });
+      !this.searchInterval$ && (this.searchInterval$ = interval(5000).subscribe(() => {
+        this.inSearchInterval = false;
+      }));
     },
     methods: {
       showSearchListing(e) {
@@ -100,8 +106,12 @@
       gotoUserPage() {
       },
       searchValueChangeByClick(e) {
-        this.searchMusic = e;
-        this.searchKeywords();
+        this.searchMusic = e.data;
+        this.searchKeywords(e.data, {
+          type: e.type || 1,
+          offset: 0,
+          limit: 30
+        });
       },
       handleCancel() {
         this.visible = false;
@@ -129,19 +139,49 @@
           this.$message.error('获取登录二维码失败，请刷新后再试');
         });
       },
-      searchKeywords() {
+      searchKeywords(search, data = {
+        offset: 0,
+        limit: 30,
+        type: 1
+      }) {
+        // limit : 返回数量 , 默认为 30 offset : 偏移数量，用于分页 ,  如 :( 页数 -1)*30, 其中 30 为 limit 的值 , 默认为 0
+        // type: 搜索类型；默认为 1 即单曲 , 取值意义 : 1: 单曲, 10: 专辑, 100: 歌手, 1000: 歌单, 1002: 用户, 1004: MV, 1006: 歌词, 1009: 电台, 1014: 视频, 1018:综合
         /*bully.setMessage({
           type: SYSTEM_EVENTS.SEARCH_KEYWORDS
         })*/
-        searchService.getSearchByKeywords(this.searchMusic).subscribe(res => {
+        if (this.inSearchInterval) {
+          this.$message.warning('搜索不能太频繁, 间隔至少要5秒钟');
+          return;
+        }
+        this.currentSearchData  = {
+          ...data,
+          keywords: search
+        };
+        console.log(search)
+        searchService.getSearchByKeywords(JSON.parse(JSON.stringify(this.currentSearchData))).subscribe(res => {
           console.log(res);
-
+          if (res.code === 200) {
+            this.inSearchInterval = true;
+            for (let key in searchService.searchEnum) {
+              if (searchService.searchEnum.hasOwnProperty(key)) {
+                if (searchService.searchEnum[key] === data.type) {
+                  this.$router.push({path:'/'});
+                  bully.setRMessage({
+                    type: SYSTEM_EVENTS.SEARCH_KEYWORDS,
+                    data: {
+                      type: key,
+                      data: res.result[key]
+                    }
+                  });
+                }
+              }
+            }
+          }
         }, error => {
           console.log(error);
           this.$message.error('网络错误');
         })
         this.showSearchListing(false);
-        // this.$router.go()
       },
       setQRInterval() {
         if (this.loginProcess !== 'loginByQR') {

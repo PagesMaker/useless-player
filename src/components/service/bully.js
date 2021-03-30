@@ -1,12 +1,33 @@
-import {Subject} from "rxjs";
+import {AsyncSubject, BehaviorSubject, ReplaySubject, Subject} from "rxjs";
 
 class BullyService {
-  bully = new Subject();
+  subject = new Subject();
+  bSubject = new BehaviorSubject();
+  rSubject = new ReplaySubject();
+  aSubject = new AsyncSubject();
   getMessage() {
-    return this.bully.asObservable();
+    return this.subject.asObservable();
   }
   setMessage(message) {
-    this.bully.next(message);
+    this.subject.next(message);
+  }
+  getBMessage() {
+    return this.bSubject.asObservable();
+  }
+  setBMessage(message) {
+    this.bSubject.next(message);
+  }
+  getAMessage() {
+    return this.aSubject.asObservable();
+  }
+  setAMessage(message) {
+    this.aSubject.next(message);
+  }
+  getRMessage() {
+    return this.rSubject.asObservable();
+  }
+  setRMessage(message) {
+    this.rSubject.next(message);
   }
 }
 export const bully =  new BullyService();
