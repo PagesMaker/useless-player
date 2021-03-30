@@ -17,5 +17,6 @@ npm run build
 # build for production and view the bundle analyzer report
 npm run build --report
 ```
+# 不一定最强大但是也不一定最好用的网易云播放器（代码也是偷的）
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
