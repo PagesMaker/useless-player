@@ -247,6 +247,7 @@
   .search-modal-content {
     width: 100%;
     height: 100%;
+    position: absolute;
     .search-wrapper {
       @include flex(row, space-between, flex-start);
       position: absolute;
@@ -308,6 +309,8 @@
 
             .search-word {
               max-width: 80%;
+              white-space: nowrap;
+              overflow: hidden;
             }
           }
 

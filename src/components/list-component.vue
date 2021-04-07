@@ -1,7 +1,7 @@
 <template>
     <div class="router-content">
       <div class="music-list">
-        <div class="music-list-header">
+        <div class="music-list-header" v-if="!searchMode">
           <div v-if="crtListInfo.coverImgUrl" class="music-list-img-box">
             <img class="music-list-img" :src="crtListInfo.coverImgUrl" alt="">
           </div>
@@ -36,7 +36,7 @@
                 <a-icon type="menu" title="排序" />
                 <span>排序</span>
               </a-button>
-              <a-button v-if="!searchMode" @click="toggleSearch(true)">
+              <a-button v-if="!searchInList" @click="toggleSearch(true)">
                 <a-icon type="search" title="搜索" />
                 <span>搜索</span>
               </a-button>
@@ -50,7 +50,7 @@
           </div>
         </div>
         <div class="music-list-body">
-          <a-tabs default-active-key="1" @change="tabChanged(e)">
+          <!--<a-tabs default-active-key="1" @change="tabChanged(e)" v-if>
             <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
               <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
                 <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index ? 'is-playing' : ''">
@@ -62,7 +62,7 @@
                     <a-icon class="blue-hover" type="download" title="下载"/>
                     <a-icon class="blue-hover" type="delete" title="从播放列表删除" />
                     <a-icon class="blue-hover" type="message" title="评论" />
-                    <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" /><!-- todo -->
+                    <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" />&lt;!&ndash; todo 似乎网页不好做？待研究 &ndash;&gt;
                     <a-icon class="blue-hover" type="plus-square" title="添加到" />
                   </div>
                 </div>
@@ -75,12 +75,21 @@
               </a-table>
             </a-tab-pane>
             <a-tab-pane key="2" tab="最近收藏">
-              暂无收藏
+
             </a-tab-pane>
             <a-tab-pane key="3" tab="评论">
-              暂无评论
+
             </a-tab-pane>
-          </a-tabs>
+          </a-tabs>-->
+          <table-in-list
+            :search-mode="searchMode"
+            :songs="searchMode ? currentSearchData : songs"
+            :currentSongIdx="currentSongIdx"
+            :columns="searchMode ? searchListingColumns : columns"
+            @hoverInRow="rowHover($event)"
+            @changeCurrentSongIdx="getSongsDetail($event)"
+            @addToList="addToList($event)"
+          ></table-in-list>
         </div>
       </div>
     </div>
@@ -91,31 +100,56 @@
   import {SYSTEM_EVENTS} from "../Const";
   import {UserInfos} from "./service/user-info.service";
   import {songInfoService} from "./service/song-info.service";
-
-  /*const renderContent = (value, row, index) => {
-    const obj = {
-      children: value,
-      attrs: {},
-    };
-    if (index === 0 || index === 2) {
-      obj.attrs.colSpan = 0;
-    }
-    return obj;
-  };*/
+  import tableInList from "./table-in-list";
     export default {
       name: "list-component",
+      components: {
+        tableInList
+      },
       data () {
         return {
           subscription: [],
           searchMode: false,
+          searchInList: false,
           searchText: '',
           isEditMode: false,
           crtListInfo: {},
           crtListInfoIdx: 0,
           songs: [],
+          currentSearchData: [],
           userInfo: {},
           listInfo: {},
           currentSongIdx: 0,
+          searchListingColumns: [
+            {
+              title: '歌曲',
+              dataIndex: 'rowName',
+              fixed: 'left',
+              width: '40%',
+              scopedSlots: { customRender: 'name' }
+            },
+            {
+              title: '歌手',
+              dataIndex: 'artists',
+              fixed: 'left',
+              width: '20%',
+              scopedSlots: { customRender: 'singer' }
+            },
+            {
+              title: '专辑',
+              dataIndex: 'album',
+              fixed: 'left',
+              width: '20%',
+              scopedSlots: { customRender: 'album' }
+            },
+            {
+              title: '时长',
+              dataIndex: 'duration',
+              fixed: 'left',
+              width: '20%',
+              scopedSlots: { customRender: 'time' }
+            }
+          ],
           columns: [
             {
               title: '歌曲',
@@ -180,7 +214,14 @@
         const subR = bully.getRMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
             console.log(res.data);
+            this.currentSearchData = res.data.data;
+            this.currentSongIdx = -1;
+            this.searchMode = true;
+            if (res.data.type === 'album') {
+            } else {
+            }
           }
+
         })
         this.subscription.push(sub, subR);
       },
@@ -193,8 +234,13 @@
         this.subscription = null;
       },
       methods: {
-        getTitle(data) {
-          return data.map(item => item.name).join(' / ')
+        addToList(data) {
+          songInfoService.songListEdit({
+            op: 'add',
+            ...data
+          }).subscribe(res => {
+
+          })
         },
         getListInfo(data) {
           songInfoService.getUserPlaylist(data.id).subscribe(res => {
@@ -211,34 +257,30 @@
             this.$message.error('获取用户歌单失败');
           });
         },
-        setRowBehaviour(data) {
-          return {
-            on: { // 事件
-              mouseenter: () => {
-                data.rowName.hover = true;
-              },  // 鼠标移入行
-              mouseleave: () => {
-                data.rowName.hover = false;
-              },
-              dblclick: () => {
-                this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
-                console.log(this.currentSongIdx);
-                this.getSongsDetail(data);
-              }
-            },
-          };
+        rowHover(e) {
+          console.log(this.songs, this.currentSearchData)
+          !this.searchMode ? (this.songs[e.idx].rowName.hover = e.hover) : (this.currentSearchData[e.idx].rowName.hover = e.hover);
         },
         getSongsDetail(data) {
-          songInfoService.getSongDetail(data.id).subscribe(res => {
-            console.log(res);
-            data = {...data, ...res.data[0]};
-            bully.setMessage({
-              type: SYSTEM_EVENTS.PLAY_MUSIC,
-              data
-            })
+          songInfoService.getAlbum(data.album.id).subscribe(res => {
+            if (res.code === 200) {
+              data.al = res.album;
+              data.ar = data.artists;
+              this.currentSongIdx = this.songs.findIndex(item => item.id === data.id)
+              songInfoService.getSongDetail(data.id).subscribe(res => {
+                console.log(res);
+                data = {...data, ...res.data[0]};
+                bully.setMessage({
+                  type: SYSTEM_EVENTS.PLAY_MUSIC,
+                  data
+                })
+              });
+            }
           });
         },
         getListDetail(switchList = false) {
+          this.searchMode = false;
+          this.currentSongIdx = 0;
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
@@ -252,7 +294,6 @@
                   }
                 });
                 this.songs = res.playlist.tracks;
-                console.log(this.songs);
                 this.getSongUrl();
               }
             }, () => {
@@ -268,7 +309,7 @@
               data: data
             })
           }, () => {
-            this.$message.error('获取歌区详情失败')
+            this.$message.error('获取歌曲详情失败')
           });
         },
         setCrtList(i) {
@@ -286,12 +327,9 @@
             coverImgUrl: ''
           }
         },
-        tabChanged(e) {},
         toggleSearch(e) {
-          this.searchMode = e;
+          this.searchInList = e;
           this.searchText = '';
-        },
-        jumpToAuthorPage(auth) {
         }
       }
     }
@@ -400,66 +438,6 @@
         }
       }
     }
-    .music-list-body{
-      /deep/ .ant-tabs-bar{
-        border: none;
-      }
-      /deep/ .ant-table-row{
-        user-select: none;
-      }
-        /deep/ .ant-table-small{
-          border: none;
-        }
-      /deep/ .ant-table-fixed-left{
-        width: $max;
-        .ant-table-fixed{
-          width: $max!important;
-        }
-      }
-    }
-  }
-  .blue-hover{
-    font-size: 1.2em;
-  }
-  .blue-hover:hover{
-    color: $blue;
-    cursor: pointer;
-  }
-  .is-playing{
-    color: $blue;
-  }
-  .row-of-song-name{
-    @include flex(row, space-between, center);
-    width: 100%;
-    max-width: 4rem;
-    .heart-icon{
-      @include flex(row, flex-start, center);
-      width: auto;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      .song-name{
-        margin-left: 10px;
-      }
-    }
-    .edit-area{
-      width: auto;
-      white-space: nowrap;
-    }
-  }
-  .row-of-singer{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    max-width: 3rem;
-  }
-  .row-of-album{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    max-width: 3rem;
   }
 
 </style>

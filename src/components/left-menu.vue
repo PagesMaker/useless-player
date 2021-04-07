@@ -7,6 +7,7 @@
       :default-selected-keys="[8]"
       :open-keys.sync="openKeys"
       mode="inline"
+      :selectedKeys="selectedKeys"
       @click="handleClick"
     >
       <a-sub-menu key="sub1" @titleClick="titleClick">
@@ -50,16 +51,23 @@
       return {
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
-        subscription: []
+        subscription: [],
+        selectedKeys: [0]
       };
     },
     mounted() {
       const sub =  bully.getMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.SYNC_LIST) {
           this.songLists = res.data;
+          this.selectedKeys = [8];
         }
       })
-      this.subscription.push(sub);
+      const rsub = bully.getRMessage().subscribe(res => {
+        if (res.type ===  SYSTEM_EVENTS.SEARCH_KEYWORDS) {
+          this.selectedKeys = [0];
+        }
+      })
+      this.subscription.push(sub, rsub);
     },
     destroyed() {
       for (const ite of this.subscription) {
@@ -77,6 +85,7 @@
     methods: {
       handleClick(e) {
         console.log('click', e);
+        this.selectedKeys = [e.key];
       },
       titleClick(e) {
         console.log('titleClick', e);

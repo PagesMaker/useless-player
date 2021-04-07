@@ -1,11 +1,17 @@
 <template>
   <div>
     <div class="header-content-box">
-      <div class="search-music-input-box">
-        <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords(searchMusic)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
-          <a-icon slot="prefix" type="search" />
-        </a-input>
-        <search-modal @searchValueChangeByClick="searchValueChangeByClick($event)" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
+      <div class="header-left-wrapper">
+        <div class="navigate-box">
+          <a-icon type="left" @click="navigateTo('back')"/>
+          <a-icon type="right" @click="navigateTo('forward')" />
+        </div>
+        <div class="search-music-input-box">
+          <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords(searchMusic)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
+            <a-icon slot="prefix" type="search" />
+          </a-input>
+          <search-modal @searchValueChangeByClick="searchValueChangeByClick($event)" v-if="isSearchListingShow" :searchValue="searchMusic"></search-modal>
+        </div>
       </div>
       <div class="user-infos">
         <div v-if="userInfo.isLogin" class="user-infos-box">
@@ -67,6 +73,7 @@
     data() {
       return {
         qr: '',
+        router: [],
         qrKey: '',
         currentSearchData: {},
         searchMusic: '',
@@ -99,6 +106,13 @@
     methods: {
       showSearchListing(e) {
         this.isSearchListingShow = e;
+      },
+      navigateTo(type) {
+        if (type === 'forward') {
+
+        } else if (type === 'back') {
+
+        }
       },
       handleOk(e) {
         console.log(e);
@@ -166,6 +180,12 @@
               if (searchService.searchEnum.hasOwnProperty(key)) {
                 if (searchService.searchEnum[key] === data.type) {
                   this.$router.push({path:'/'});
+                  res.result[key].forEach(item => {
+                    item.rowName = {
+                      name: item.name,
+                      hover: false
+                    }
+                  });
                   bully.setRMessage({
                     type: SYSTEM_EVENTS.SEARCH_KEYWORDS,
                     data: {
@@ -219,6 +239,7 @@
               this.account = res.account;
               UserInfos.userInfo = res.profile;
               this.userInfo = UserInfos;
+              console.log(res.profile)
               UserInfos.getUserDetail(res.account.id).subscribe(resp => {
                 if (resp.code === 200) {
                   console.log(resp);
@@ -265,14 +286,25 @@
     /deep/ .anticon.anticon-user{
       font-size:2em;
     }
-    .search-music-input-box{
-      position: relative;
-      width: 24%;
+    .header-left-wrapper{
+      width: 30%;
       height: 60%;
-      margin-left: 20px;
+      @include flex(row, space-between, center);
+    }
+    .search-music-input-box{
+      @include flex(row, space-around, center);
+      position: relative;
+      width: 85%;
+      height: 100%;
+    }
+    .navigate-box{
+      @include flex(row, space-around, center);
+      width: 8%;
+      margin-left: 25px;
+      height: $max;
     }
     .search-music-input{
-      width: $max;
+      width: 100%;
       height: $max;
       /deep/ .ant-input{
         border-radius: 30px;

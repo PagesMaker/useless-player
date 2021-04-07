@@ -13,5 +13,13 @@ class SongInfoService {
   getUserPlaylistDetail(id) {
     return HTTPClient.get(`/playlist/detail?id=${id}`);
   }
+
+  songListEdit(param) {
+    return HTTPClient.post(`/playlist/tracks`, param);
+  }
+
+  getAlbum(id) {
+    return HTTPClient.get(`/album?id=${id}`);
+  }
 }
 export const songInfoService = new SongInfoService();
