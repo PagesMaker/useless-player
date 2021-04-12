@@ -6,7 +6,9 @@ export const SYSTEM_EVENTS = {
   SWITCH_SONG: 'switch-song',
   CHANGE_PROCESS: 'change-process',
   SEARCH_KEYWORDS: 'search-keywords',
-  GOT_SEARCH_RESULT: 'got-search-result'
+  GOT_SEARCH_RESULT: 'got-search-result',
+  SONG_LIST_RREFRESH: 'song-list-refresh',
+  GET_SONG_LIST: 'get-song-list'
 }
 export const APP = {
   MIN_WIDTH: 1080,

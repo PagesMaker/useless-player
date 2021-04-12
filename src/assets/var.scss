@@ -12,6 +12,8 @@ $songImageWidth: 430px;
 $z1e7: 1e7;
 $z1e4: 1e4;
 $z1e3: 1e3;
+$shadow: 0 0 10px 0 rgb(10, 10, 10);
+
 @mixin flex($direction: row , $justify: center , $align: center){
   display: flex;
   flex-direction: $direction;

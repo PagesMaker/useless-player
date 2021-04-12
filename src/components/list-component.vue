@@ -258,14 +258,19 @@
           });
         },
         rowHover(e) {
-          console.log(this.songs, this.currentSearchData)
           !this.searchMode ? (this.songs[e.idx].rowName.hover = e.hover) : (this.currentSearchData[e.idx].rowName.hover = e.hover);
         },
         getSongsDetail(data) {
+          if (!this.searchMode) {
+            this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
+            this.getSongUrl();
+            return;
+          }
           songInfoService.getAlbum(data.album.id).subscribe(res => {
             if (res.code === 200) {
               data.al = res.album;
               data.ar = data.artists;
+              data.dt = data.duration;
               this.currentSongIdx = this.songs.findIndex(item => item.id === data.id)
               songInfoService.getSongDetail(data.id).subscribe(res => {
                 console.log(res);
@@ -279,14 +284,11 @@
           });
         },
         getListDetail(switchList = false) {
-          this.searchMode = false;
-          this.currentSongIdx = 0;
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
             songInfoService.getUserPlaylistDetail(this.crtListInfo.id).subscribe(res => {
               if (res.code === 200) {
-                console.log(res);
                 res.playlist.tracks.forEach(item => {
                   item.rowName = {
                     name: item.name,
@@ -313,6 +315,10 @@
           });
         },
         setCrtList(i) {
+          if (this.searchMode) {
+            this.searchMode = false;
+            this.currentSongIdx = 0;
+          }
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
             this.crtListInfoIdx = i;

@@ -9,11 +9,7 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <a-icon class="blue-hover" type="download" title="下载"/>
-              <a-icon class="blue-hover" type="delete" title="从播放列表删除" />
-              <a-icon class="blue-hover" type="message" title="评论" />
-              <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" /><!-- todo 似乎网页不好做？待研究 -->
-              <a-icon class="blue-hover" type="plus-square" title="添加到" />
+              <icon-group :showIcon="showIcon" :idx="index"  @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event)"></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -42,10 +38,7 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <a-icon class="blue-hover" type="download" title="下载"/>
-              <a-icon class="blue-hover" type="message" title="评论" />
-              <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" /><!-- todo 似乎网页不好做？待研究 -->
-              <a-icon class="blue-hover" type="plus-square" title="添加到" @click="addToList(index)" />
+              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event)"></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -66,16 +59,22 @@
     import {songInfoService} from "./service/song-info.service";
     import {bully} from "./service/bully";
     import {SYSTEM_EVENTS} from "../Const";
-
+    import iconGroup from "./icon-group";
     export default {
       name: "table-in-list",
+      components: {
+        iconGroup
+      },
       data() {
           return {
             tabs: [],
-            subscription: []
+            subscription: [],
+            currentSelectedRow: -1,
+            showIcon: []
           }
       },
       mounted() {
+        this.initShowIcons();
         const subR = bully.getRMessage().subscribe(res => {
         })
         this.subscription.push(subR);
@@ -89,6 +88,9 @@
         this.subscription = null;
       },
       methods: {
+        initShowIcons() {
+          this.showIcon = ['comment', 'deleteFromList', 'download', 'shared', 'addToList'];
+        },
         tabChanged(e) {},
         getTitle(data) {
           return data.map(item => item.name).join(' / ')
@@ -101,6 +103,7 @@
               },  // 鼠标移入行
               mouseleave: () => {
                 this.$emit('hoverInRow', {idx, hover: false});
+                console.log('leave')
               },
               dblclick: () => {
                 this.$emit('changeCurrentSongIdx', data);
@@ -110,11 +113,26 @@
         },
         jumpToAuthorPage(auth) {
         },
-        addToList(idx) {
-          this.$emit('addToList', idx);
+        addToList(e) {
+          this.$emit('addToList', e);
+        },
+        removeShowIcons(...data) {
+          console.log(data);
+          data.forEach(item => {
+            this.showIcon = this.showIcon.filter(it => it !== item);
+          })
         }
       },
-      props: ['songs', 'currentSongIdx', 'columns', 'searchMode']
+      props: ['songs', 'currentSongIdx', 'columns', 'searchMode'],
+      watch: {
+        searchMode: {
+          handler(e) {
+            if (e) {
+              this.removeShowIcons('deleteFromList')
+            }
+          }
+        }
+      }
     }
 </script>
 

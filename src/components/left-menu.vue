@@ -61,6 +61,12 @@
           this.songLists = res.data;
           this.selectedKeys = [8];
         }
+        if (res.type === SYSTEM_EVENTS.GET_SONG_LIST) {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.SONG_LIST_RREFRESH,
+            data: this.songLists
+          })
+        }
       })
       const rsub = bully.getRMessage().subscribe(res => {
         if (res.type ===  SYSTEM_EVENTS.SEARCH_KEYWORDS) {

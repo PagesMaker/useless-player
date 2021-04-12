@@ -260,7 +260,7 @@
       background-color: white;
       border-radius: 5px;
       z-index: $z1e4;
-      box-shadow: 0 0 10px 0 rgb(10, 10, 10);
+      box-shadow: $shadow;
       ul{
         margin: 0;
       }

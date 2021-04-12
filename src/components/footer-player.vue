@@ -241,6 +241,7 @@
       this.player = this.$refs.mainPlayer;
       const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(() => {
         if (!this.isPaused) {
+          console.log(this.player.currentTime);
           this.currentTime = +this.player.currentTime.toFixed(0);
         }
       })
