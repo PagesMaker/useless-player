@@ -9,13 +9,13 @@
                     overlayClassName="add-to-list-overlay-content">
           <a-icon class="blue-hover" type="plus-square" title="添加到" @click="openAddToListModal()" />
           <div slot="overlay" class="add-to-list">
-            <div class="add-to-new-list">
+            <div class="add-to-new-list" @click="addToList('new')">
               <a-icon type="plus-square" />
               <span>添加到新建歌单</span>
             </div>
             <div class="add-to-existed-list">
               <ul class="existed-listing">
-                <li class="existed-list-item" v-for="item in songLists">
+                <li class="existed-list-item" @click="addToList('existed', item)" :title="item.name" v-for="item in songLists">
                   {{item.name}}
                 </li>
               </ul>
@@ -60,8 +60,12 @@
         getPopupContainer() {
           return this.$refs.iconGroup;
         },
-        addToList() {
-          this.$emit('addToList', this.row);
+        addToList(type , data = {}) {
+          if (type === 'new') {
+            this.$emit('addToNewList');
+          } else {
+            this.$emit('addToList', data.id);
+          }
         },
         openAddToListModal(idx) {
           // this.$emit('addToList', idx);
@@ -95,7 +99,47 @@
     @include flex(column, flex-start, flex-start);
     width: 280px;
     background-color: #fff;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 16px;
+    color: black;
     box-shadow: $shadow;
+    padding:  20px 0;
+    .add-to-new-list{
+      padding: 0 20px;
+      width: 100%;
+      @include flex(row, flex-start,center);
+      height: 2.6em;
+      span{
+        margin-left: 24px;
+      }
+      /deep/ .anticon{
+        color: black;
+      }
+    }
+    .add-to-new-list:hover{
+      cursor: pointer;
+      background-color: #E7E7E7;
+    }
+    .add-to-existed-list{
+      width: 100%;
+      .existed-listing{
+        @include flex(column, flex-start, flex-start);
+        margin-bottom: unset;
+        width: 100%;
+        .existed-list-item{
+          @include flex(row, flex-start, center);
+          padding: 0 0 0 63px;
+          width: 100%;
+          height: 2.6em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow:ellipsis;
+        }
+        .existed-list-item:hover{
+          cursor: pointer;
+          background-color: #E7E7E7;
+        }
+      }
+    }
   }
 </style>

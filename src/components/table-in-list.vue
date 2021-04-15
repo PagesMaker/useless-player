@@ -38,7 +38,7 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event)"></icon-group>
+              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, text)" @addToNewList="addToNewList()"></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -113,8 +113,12 @@
         },
         jumpToAuthorPage(auth) {
         },
-        addToList(e) {
+        addToList(e, data) {
+          console.log(data);
           this.$emit('addToList', e);
+        },
+        addToNewList() {
+          this.$emit('addToNewList');
         },
         removeShowIcons(...data) {
           console.log(data);

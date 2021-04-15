@@ -89,6 +89,7 @@
             @hoverInRow="rowHover($event)"
             @changeCurrentSongIdx="getSongsDetail($event)"
             @addToList="addToList($event)"
+            @addToNewList="addToNewList()"
           ></table-in-list>
         </div>
       </div>
@@ -241,6 +242,9 @@
           }).subscribe(res => {
 
           })
+        },
+        addToNewList() {
+
         },
         getListInfo(data) {
           songInfoService.getUserPlaylist(data.id).subscribe(res => {
