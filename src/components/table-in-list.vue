@@ -38,7 +38,7 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, text)" @addToNewList="addToNewList()"></icon-group>
+              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -113,12 +113,25 @@
         },
         jumpToAuthorPage(auth) {
         },
-        addToList(e, data) {
-          console.log(data);
-          this.$emit('addToList', e);
+        addToList(e, index) {
+          console.log(index, this.songs)
+          bully.setMessage({
+            type: SYSTEM_EVENTS.ADD_TO_SONG_LIST,
+            data: {
+              op: 'add',
+              tracks: this.songs[index].id,
+              pid: e
+            }
+          });
         },
-        addToNewList() {
-          this.$emit('addToNewList');
+        addToNewList(index) {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST,
+            data: {
+              op: 'add',
+              tracks: this.songs[index].id,
+            }
+          });
         },
         removeShowIcons(...data) {
           console.log(data);

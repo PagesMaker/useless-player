@@ -91,7 +91,7 @@
     mounted() {
       setTimeout(() => {
         if (document.cookie.includes('__csrf')) {
-          UserInfos.cookie = document.cookie + '; HTTPOnly';
+          UserInfos.cookie = document.cookie;
           UserInfos.isLogin = true;
           this.getLoginStatus();
         }
@@ -220,7 +220,9 @@
                 // 扫码成功
                 UserInfos.isLogin = true;
                 UserInfos.cookie = res.cookie;
+                // localStorage.setItem('cookie', res.cookie);
                 res.cookie.split(';;').forEach(item => {
+                  console.log(item);
                   item = item.split('HTTPOnly')[0];
                   document.cookie = item;
                 })
@@ -256,7 +258,9 @@
             }
           }
         }, () => {
-          this.$message.error('获取用户信息失败');
+          this.$message.error('获取用户信息失败, 请刷新页面重试或者重新登录');
+          UserInfos.isLogin = false;
+          UserInfos.cookie = '';
         });
         UserInfos.getUserSubcount().subscribe(res => {
           console.log(res);

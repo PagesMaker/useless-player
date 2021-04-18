@@ -88,8 +88,6 @@
             :columns="searchMode ? searchListingColumns : columns"
             @hoverInRow="rowHover($event)"
             @changeCurrentSongIdx="getSongsDetail($event)"
-            @addToList="addToList($event)"
-            @addToNewList="addToNewList()"
           ></table-in-list>
         </div>
       </div>
@@ -187,6 +185,17 @@
           if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
             this.setCrtList(res.data);
           }
+          if (res.type === SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND) {
+            this.listInfo = res.data;
+            this.setCrtList(0);
+          }
+          if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
+            if (this.searchMode) {
+              return;
+            }
+            this.listInfo = res.data;
+            this.setCrtList(this.crtListInfoIdx);
+          }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data === 'next') {
               if (this.currentSongIdx + 1 >= this.songs.length) {
@@ -235,19 +244,15 @@
         this.subscription = null;
       },
       methods: {
-        addToList(data) {
-          songInfoService.songListEdit({
-            op: 'add',
-            ...data
-          }).subscribe(res => {
-
-          })
-        },
-        addToNewList() {
-
-        },
         getListInfo(data) {
-          songInfoService.getUserPlaylist(data.id).subscribe(res => {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.GET_SONG_LIST,
+            data: {
+              fromCache: false,
+              data
+            }
+          })
+          /*songInfoService.getUserPlaylist(data.id).subscribe(res => {
             console.log(res);
             if (res.code === 200) {
               this.listInfo = res.playlist;
@@ -259,7 +264,7 @@
             }
           }, () => {
             this.$message.error('获取用户歌单失败');
-          });
+          });*/
         },
         rowHover(e) {
           !this.searchMode ? (this.songs[e.idx].rowName.hover = e.hover) : (this.currentSearchData[e.idx].rowName.hover = e.hover);

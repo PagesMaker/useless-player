@@ -44,6 +44,7 @@
 <script>
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
+  import {songInfoService} from "./service/song-info.service";
 
   export default {
     name: "left-menu",
@@ -52,19 +53,34 @@
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
         subscription: [],
-        selectedKeys: [0]
+        selectedKeys: [0],
+        uid: 0
       };
     },
     mounted() {
       const sub =  bully.getMessage().subscribe(res => {
-        if (res.type === SYSTEM_EVENTS.SYNC_LIST) {
-          this.songLists = res.data;
-          this.selectedKeys = [8];
-        }
         if (res.type === SYSTEM_EVENTS.GET_SONG_LIST) {
-          bully.setMessage({
-            type: SYSTEM_EVENTS.SONG_LIST_RREFRESH,
-            data: this.songLists
+          if (res.data.fromCache) {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.SONG_LIST_REFRESH,
+              data: this.songLists
+            })
+          } else {
+            this.uid = res.data.data.id;
+            this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
+          }
+        }
+        if (res.type === SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST) {
+          // todo
+        }
+        if (res.type === SYSTEM_EVENTS.ADD_TO_SONG_LIST) {
+          songInfoService.songListEdit(
+            res.data
+          ).subscribe(res => {
+            console.log(res);
+            if (res.code === 200) {
+              this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
+            }
           })
         }
       })
@@ -89,6 +105,21 @@
       },
     },
     methods: {
+      getList(type) {
+        songInfoService.getUserPlaylist(this.uid).subscribe(res => {
+          console.log(res);
+          if (res.code === 200) {
+            this.songLists = res.playlist;
+            this.selectedKeys = [8];
+            bully.setMessage({
+              type,
+              data: this.songLists
+            });
+          }
+        }, () => {
+          this.$message.error('获取用户歌单失败');
+        });
+      },
       handleClick(e) {
         console.log('click', e);
         this.selectedKeys = [e.key];

@@ -15,7 +15,7 @@ class SongInfoService {
   }
 
   songListEdit(param) {
-    return HTTPClient.post(`/playlist/tracks`, param);
+    return HTTPClient.get(`/playlist/tracks?op=${param.op}&tracks=${param.pid}&pid=${param.tracks}`);
   }
 
   getAlbum(id) {

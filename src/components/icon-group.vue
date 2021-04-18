@@ -42,7 +42,7 @@
       },
       mounted() {
         const sub = bully.getMessage().subscribe(res => {
-          if (res.type === SYSTEM_EVENTS.SONG_LIST_RREFRESH) {
+          if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
             this.songLists = res.data;
           }
         });
@@ -72,7 +72,10 @@
           console.log(idx);
           this.showAddToListModal = true;
           bully.setMessage({
-            type: SYSTEM_EVENTS.GET_SONG_LIST
+            type: SYSTEM_EVENTS.GET_SONG_LIST,
+            data: {
+              fromCache: true
+            }
           });
         },
         closeAddToListModal() {
