@@ -88,6 +88,7 @@
             :columns="searchMode ? searchListingColumns : columns"
             @hoverInRow="rowHover($event)"
             @changeCurrentSongIdx="getSongsDetail($event)"
+            :isPlaySearchSong="isPlaySearchSong"
           ></table-in-list>
         </div>
       </div>
@@ -113,11 +114,13 @@
           searchText: '',
           isEditMode: false,
           crtListInfo: {},
+          playingList: [],
           crtListInfoIdx: 0,
           songs: [],
           currentSearchData: [],
           userInfo: {},
           listInfo: {},
+          isPlaySearchSong: false,
           currentSongIdx: 0,
           searchListingColumns: [
             {
@@ -198,25 +201,25 @@
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data === 'next') {
-              if (this.currentSongIdx + 1 >= this.songs.length) {
+              if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
                 this.$message.warning('已经是最后一首了');
                 return;
               }
               this.currentSongIdx++;
-              this.getListDetail();
+              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
             } else if (res.data === 'last') {
               if (this.currentSongIdx - 1 < 0) {
                 this.$message.warning('已经是第一首了');
                 return;
               }
               this.currentSongIdx--;
-              this.getListDetail();
+              this.searchMode && this.isPlaySearchSong? this.getSongsDetail() : this.getListDetail();
             } else if (res.data === 'current') {
-              this.getListDetail();
+              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
             } else if (res.data === 'list loop') {
-              if (this.currentSongIdx + 1 >= this.songs.length) {
+              if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
                 this.currentSongIdx = 0;
-                this.getListDetail();
+                this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
               }
             }
           }
@@ -225,7 +228,7 @@
           if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
             console.log(res.data);
             this.currentSearchData = res.data.data;
-            this.currentSongIdx = -1;
+            // this.currentSongIdx = -1;
             this.searchMode = true;
             if (res.data.type === 'album') {
             } else {
@@ -269,7 +272,7 @@
         rowHover(e) {
           !this.searchMode ? (this.songs[e.idx].rowName.hover = e.hover) : (this.currentSearchData[e.idx].rowName.hover = e.hover);
         },
-        getSongsDetail(data) {
+        getSongsDetail(data = this.currentSearchData[this.currentSongIdx]) {
           if (!this.searchMode) {
             this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
             this.getSongUrl();
@@ -280,14 +283,16 @@
               data.al = res.album;
               data.ar = data.artists;
               data.dt = data.duration;
-              this.currentSongIdx = this.songs.findIndex(item => item.id === data.id)
+              this.currentSongIdx = this.currentSearchData.findIndex(item => item.id === data.id);
+              console.log(this.currentSongIdx);
               songInfoService.getSongDetail(data.id).subscribe(res => {
                 console.log(res);
                 data = {...data, ...res.data[0]};
                 bully.setMessage({
                   type: SYSTEM_EVENTS.PLAY_MUSIC,
                   data
-                })
+                });
+                this.isPlaySearchSong = true;
               });
             }
           });
@@ -305,7 +310,9 @@
                   }
                 });
                 this.songs = res.playlist.tracks;
-                this.getSongUrl();
+                if (!switchList) {
+                  this.getSongUrl();
+                }
               }
             }, () => {
               this.$message.error('获取歌单详情失败')
@@ -318,7 +325,8 @@
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data: data
-            })
+            });
+            this.isPlaySearchSong = false;
           }, () => {
             this.$message.error('获取歌曲详情失败')
           });
@@ -360,6 +368,9 @@
     }
     /deep/ .anticon {
       font-size: 1.2em;
+    }
+    /deep/ .ant-tabs-content{
+      min-height: 400px;
     }
     .music-list-header{
       height: 165px;

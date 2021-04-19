@@ -95,8 +95,9 @@
     top: 0;
     left: 0;
   }
-  .add-to-list-overlay-content{
+  /deep/ .add-to-list-overlay-content{
     z-index: $z1e7;
+    margin: 10px 0;
   }
   .add-to-list{
     @include flex(column, flex-start, flex-start);

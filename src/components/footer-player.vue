@@ -270,11 +270,7 @@
                   } else {
                     this.startTime = 0
                   }
-                  if (!this.init) {
-                    this.play();
-                  } else {
-                    this.init = false;
-                  }
+                  this.play();
                 }
               });
             });

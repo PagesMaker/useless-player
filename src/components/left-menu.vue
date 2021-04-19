@@ -78,7 +78,7 @@
             res.data
           ).subscribe(res => {
             console.log(res);
-            if (res.code === 200) {
+            if (res.body.code === 200) {
               this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
             }
           })
