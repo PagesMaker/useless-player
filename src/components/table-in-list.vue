@@ -3,21 +3,21 @@
     <a-tabs v-show="!searchMode" default-active-key="1" @change="tabChanged(e)">
       <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
         <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
-          <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''">
+          <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index ? 'is-playing' : ''">
             <div slot="heart" class="heart-icon" >
               <a-icon class="blue-hover favourite-songs" type="heart"></a-icon>
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index"  @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event)"></icon-group>
+              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
             </div>
           </div>
-          <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">
+          <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
                    <span v-for="(auth, index) in text" @click="jumpToAuthorPage(auth)">
                         <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
+          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
         </a-table>
       </a-tab-pane>
       <a-tab-pane key="2" tab="最近收藏">
@@ -47,7 +47,7 @@
                    </span>
                 </span>
           <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
-          <span slot="time" :title="text" class="blue-hover row-of-album" :class="ccurrentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text / 1000 | timeFormat('mm:ss')}}</span>
+          <span slot="time" :title="text" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text / 1000 | timeFormat('mm:ss')}}</span>
 
         </a-table>
       </a-tab-pane>

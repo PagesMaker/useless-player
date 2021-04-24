@@ -89,6 +89,7 @@
             @hoverInRow="rowHover($event)"
             @changeCurrentSongIdx="getSongsDetail($event)"
             :isPlaySearchSong="isPlaySearchSong"
+            @scrollToBottom="getMoreSearchResult()"
           ></table-in-list>
         </div>
       </div>
@@ -120,6 +121,7 @@
           currentSearchData: [],
           userInfo: {},
           listInfo: {},
+          hasMore: false,
           isPlaySearchSong: false,
           currentSongIdx: 0,
           searchListingColumns: [
@@ -193,11 +195,11 @@
             this.setCrtList(0);
           }
           if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
-            if (this.searchMode) {
+            /*if (this.searchMode) {
               return;
             }
             this.listInfo = res.data;
-            this.setCrtList(this.crtListInfoIdx);
+            this.setCrtList(this.crtListInfoIdx);*/
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data === 'next') {
@@ -227,9 +229,10 @@
         const subR = bully.getRMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
             console.log(res.data);
-            this.currentSearchData = res.data.data;
+            this.currentSearchData = [...this.currentSearchData, ...res.data.data[res.data.type]];
             // this.currentSongIdx = -1;
             this.searchMode = true;
+            this.hasMore = res.data.data.hasMore;
             if (res.data.type === 'album') {
             } else {
             }
@@ -318,6 +321,9 @@
               this.$message.error('获取歌单详情失败')
             });
           }
+        },
+        getMoreSearchResult() {
+
         },
         getSongUrl() {
           songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {

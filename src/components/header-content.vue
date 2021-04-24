@@ -64,7 +64,6 @@
   import {fromEvent, interval, Subject} from "rxjs";
   import searchModal from './search-modal';
   import {searchService} from "./service/search.service";
-
   export default {
     name: 'header-content',
     components: {
@@ -190,7 +189,7 @@
                     type: SYSTEM_EVENTS.SEARCH_KEYWORDS,
                     data: {
                       type: key,
-                      data: res.result[key]
+                      data: res.result
                     }
                   });
                 }

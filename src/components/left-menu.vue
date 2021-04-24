@@ -80,6 +80,8 @@
             console.log(res);
             if (res.body.code === 200) {
               this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
+            } else if (res.body.code === 502) {
+              this.$message.create('warning' , res.body.message);
             }
           })
         }
