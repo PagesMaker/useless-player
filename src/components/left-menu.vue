@@ -33,9 +33,26 @@
       </a-sub-menu>
       <a-sub-menu key="sub3">
         <span slot="title"><span>我的歌单</span></span>
-        <a-menu-item @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
-          {{songList.name}}
-        </a-menu-item>
+        <a-tooltip :defaultVisible="true" placement="topLeft" v-if="addingNewList">
+          <template slot="title">
+            <span>请输入新歌单的名称</span>
+          </template>
+          <a-input ref="newListInput" style="width: 80%;margin-left: 10%" v-model="newListName" @keypress.enter="addNewList()" @blur="addNewList()"/>
+        </a-tooltip>
+<!--        <a-dropdown :trigger="['contextmenu']">-->
+          <a-menu-item v-show="selectedEditItem.index !== index" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
+            {{songList.name}}
+          </a-menu-item>
+          <a-input v-for="(songList, index) in songLists" v-show="selectedEditItem.index === index" style="width: 80%;margin-left: 10%" v-model="selectedEditItem.name" :defaultValue="songList.name" @keypress.enter="sendEditListItem(index)" @blur="sendEditListItem(index)"/>
+         <!-- <a-menu slot="overlay1">
+            <a-menu-item key="1" @click="editItem('remove')">
+              删除
+            </a-menu-item>
+            <a-menu-item key="2" @click="editItem('rename')">
+              重命名
+            </a-menu-item>
+          </a-menu>
+        </a-dropdown>-->
       </a-sub-menu>
     </a-menu>
   </div>
@@ -50,11 +67,15 @@
     name: "left-menu",
     data() {
       return {
+        newListName: '',
+        addingNewList: false,
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
         subscription: [],
         selectedKeys: [0],
-        uid: 0
+        uid: 0,
+        addToNewListData: null,
+        selectedEditItem: {}
       };
     },
     mounted() {
@@ -62,7 +83,7 @@
         if (res.type === SYSTEM_EVENTS.GET_SONG_LIST) {
           if (res.data.fromCache) {
             bully.setMessage({
-              type: SYSTEM_EVENTS.SONG_LIST_REFRESH,
+              type: SYSTEM_EVENTS.SONG_LIST_REFRESH_BY_GET_LIST,
               data: this.songLists
             })
           } else {
@@ -71,7 +92,12 @@
           }
         }
         if (res.type === SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST) {
-          // todo
+          this.addingNewList = true;
+          this.newListName = '';
+          this.addToNewListData = res.data;
+          this.$nextTick(() => {
+            this.$refs.newListInput.focus();
+          });
         }
         if (res.type === SYSTEM_EVENTS.ADD_TO_SONG_LIST) {
           songInfoService.songListEdit(
@@ -81,7 +107,7 @@
             if (res.body.code === 200) {
               this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
             } else if (res.body.code === 502) {
-              this.$message.create('warning' , res.body.message);
+              this.$message.warning(res.body.message);
             }
           })
         }
@@ -107,6 +133,39 @@
       },
     },
     methods: {
+      editItem(type) {
+
+      },
+      sendEditListItem(idx) {
+
+      },
+      addNewList() {
+        if (!this.newListName.length) {
+          this.addingNewList = false;
+          this.addToNewListData = null;
+          return;
+        }
+        songInfoService.addNewList(this.newListName).subscribe(res => {
+          if (res.code === 200) {
+            console.log(res);
+            this.addingNewList = false;
+            this.newListName = '';
+            if (this.addToNewListData) {
+              songInfoService.songListEdit(
+                {
+                  ...this.addToNewListData,
+                  pid: res.id
+                }
+              ).subscribe(res => {
+                console.log(res);
+                if (res.body.code === 200) {
+                  this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
+                }
+              })
+            }
+          }
+        });
+      },
       getList(type) {
         songInfoService.getUserPlaylist(this.uid).subscribe(res => {
           console.log(res);

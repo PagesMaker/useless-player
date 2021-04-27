@@ -195,11 +195,11 @@
             this.setCrtList(0);
           }
           if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
-            /*if (this.searchMode) {
+            if (this.searchMode) {
               return;
             }
             this.listInfo = res.data;
-            this.setCrtList(this.crtListInfoIdx);*/
+            this.setCrtList(this.crtListInfoIdx);
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data === 'next') {

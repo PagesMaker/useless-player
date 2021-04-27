@@ -42,7 +42,7 @@
       },
       mounted() {
         const sub = bully.getMessage().subscribe(res => {
-          if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
+          if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH_BY_GET_LIST) {
             this.songLists = res.data;
           }
         });

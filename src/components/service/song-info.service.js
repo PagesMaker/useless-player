@@ -21,5 +21,9 @@ class SongInfoService {
   getAlbum(id) {
     return HTTPClient.get(`/album?id=${id}`);
   }
+
+  addNewList(name) {
+    return HTTPClient.get(`/playlist/create?name=${name}`);
+  }
 }
 export const songInfoService = new SongInfoService();
