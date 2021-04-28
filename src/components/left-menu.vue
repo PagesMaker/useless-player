@@ -40,8 +40,9 @@
           <a-input ref="newListInput" style="width: 80%;margin-left: 10%" v-model="newListName" @keypress.enter="addNewList()" @blur="addNewList()"/>
         </a-tooltip>
 <!--        <a-dropdown :trigger="['contextmenu']">-->
-          <a-menu-item v-show="selectedEditItem.index !== index" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
+          <a-menu-item class="song-list-item" v-show="selectedEditItem.index !== index" @contextmenu.prevent.stop="openRightMenu($event, index)" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
             {{songList.name}}
+            <context-menu v-if="contextMenuIdx === index" :position="position" @close="closeRightMenu()"></context-menu>
           </a-menu-item>
           <a-input v-for="(songList, index) in songLists" v-show="selectedEditItem.index === index" style="width: 80%;margin-left: 10%" v-model="selectedEditItem.name" :defaultValue="songList.name" @keypress.enter="sendEditListItem(index)" @blur="sendEditListItem(index)"/>
          <!-- <a-menu slot="overlay1">
@@ -62,12 +63,17 @@
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
   import {songInfoService} from "./service/song-info.service";
-
+  import contextMenu from './context-menu';
   export default {
     name: "left-menu",
+    components: {
+      contextMenu
+    },
     data() {
       return {
         newListName: '',
+        position: {},
+        contextMenuIdx: null,
         addingNewList: false,
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
@@ -135,6 +141,20 @@
     methods: {
       editItem(type) {
 
+      },
+      openRightMenu(e, idx) {
+        this.closeRightMenu();
+        console.log(e);
+        this.position = {
+          left: e.x,
+          top: e.y
+        }
+        this.$nextTick(() => {
+          this.contextMenuIdx = idx;
+        });
+      },
+      closeRightMenu() {
+        this.contextMenuIdx = null;
       },
       sendEditListItem(idx) {
 
@@ -211,5 +231,8 @@
     text-align: center;
     line-height: 60px;
     font-size: 26px;
+  }
+  .song-list-item{
+    overflow: visible;
   }
 </style>
