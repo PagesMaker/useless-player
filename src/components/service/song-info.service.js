@@ -15,15 +15,22 @@ class SongInfoService {
   }
 
   songListEdit(param) {
-    return HTTPClient.get(`/playlist/tracks?op=${param.op}&pid=${param.pid}&tracks=${param.tracks}`, {withTimeStamp: true});
+    return HTTPClient.get(`/playlist/tracks?op=${param.op}&pid=${param.pid}${param.tracks ? `&tracks=${param.tracks}` : ''}`, {withTimeStamp: true});
   }
 
   getAlbum(id) {
-    return HTTPClient.get(`/album?id=${id}`);
+    return HTTPClient.get(`/album?id=${id}`, {withTimeStamp: true});
   }
 
   addNewList(name) {
-    return HTTPClient.get(`/playlist/create?name=${name}`);
+    return HTTPClient.get(`/playlist/create?name=${name}`, {withTimeStamp: true});
+  }
+
+  updateSongList(data) {
+    return HTTPClient.post(`/playlist/name/update`, data, {withTimeStamp: true});
+  }
+  removeSongList(id) {
+    return HTTPClient.get(`/playlist/delete?id=${id}`, {withTimeStamp: true});
   }
 }
 export const songInfoService = new SongInfoService();

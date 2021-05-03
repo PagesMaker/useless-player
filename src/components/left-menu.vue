@@ -32,19 +32,21 @@
         </a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub3">
-        <span slot="title"><span>我的歌单</span></span>
-        <a-tooltip :defaultVisible="true" placement="topLeft" v-if="addingNewList">
-          <template slot="title">
-            <span>请输入新歌单的名称</span>
-          </template>
-          <a-input ref="newListInput" style="width: 80%;margin-left: 10%" v-model="newListName" @keypress.enter="addNewList()" @blur="addNewList()"/>
-        </a-tooltip>
+        <span slot="title" class="my-song-title"><span>我的歌单</span><a-icon @click.stop="addSongToNewList()" type="plus"></a-icon></span>
+        <a-menu-item class="song-list-item" v-if="addingNewList" :key="8 + songLists.length">
+          <a-tooltip :defaultVisible="true" placement="topLeft">
+            <template slot="title">
+              <span>请输入新歌单的名称</span>
+            </template>
+            <a-input ref="newListInput" style="width: 100%;" v-model="newListName" @keypress.enter="addNewList()" @blur="addNewList()"/>
+          </a-tooltip>
+        </a-menu-item>
 <!--        <a-dropdown :trigger="['contextmenu']">-->
-          <a-menu-item class="song-list-item" v-show="selectedEditItem.index !== index" @contextmenu.prevent.stop="openRightMenu($event, index)" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
-            {{songList.name}}
-            <context-menu v-if="contextMenuIdx === index" :position="position" @close="closeRightMenu()"></context-menu>
+          <a-menu-item class="song-list-item" @contextmenu.prevent.stop="openRightMenu($event, index)" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
+            <span v-show=" selectedEditItem.action === 'edit'? selectedEditItem.index !== index: true">{{songList.name}}</span>
+            <context-menu v-if="contextMenuIdx === index" :contextMenuIdx="contextMenuIdx" @action="menuClick($event)" :contextMenu="songListContextMenu" :position="position" @close="closeRightMenu()"></context-menu>
+            <a-input ref="selectedEditItems" @click.stop="" v-show="selectedEditItem.index === index && selectedEditItem.action === 'edit'" style="width: 80%;" v-model="selectedEditItem.name" :defaultValue="songList.name" @keypress.enter="renameSongList()" @blur="renameSongList()"/>
           </a-menu-item>
-          <a-input v-for="(songList, index) in songLists" v-show="selectedEditItem.index === index" style="width: 80%;margin-left: 10%" v-model="selectedEditItem.name" :defaultValue="songList.name" @keypress.enter="sendEditListItem(index)" @blur="sendEditListItem(index)"/>
          <!-- <a-menu slot="overlay1">
             <a-menu-item key="1" @click="editItem('remove')">
               删除
@@ -56,6 +58,8 @@
         </a-dropdown>-->
       </a-sub-menu>
     </a-menu>
+    <div v-if="contextMenuIdx !== -1" class="outside-mask" @click.stop="closeRightMenu()" @contextmenu.prevent="closeRightMenu()">
+    </div>
   </div>
 </template>
 
@@ -81,10 +85,25 @@
         selectedKeys: [0],
         uid: 0,
         addToNewListData: null,
-        selectedEditItem: {}
+        selectedEditItem: {index: -1},
+        songListContextMenu: []
       };
     },
     mounted() {
+      this.songListContextMenu = [
+        {
+          name: '播放',
+          action: this.selectSongList
+        },
+        {
+          name: '删除',
+          action: this.deleteItem
+        },
+        {
+          name: '重命名',
+          action: this.editItemName
+        }
+        ];
       const sub =  bully.getMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.GET_SONG_LIST) {
           if (res.data.fromCache) {
@@ -98,12 +117,7 @@
           }
         }
         if (res.type === SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST) {
-          this.addingNewList = true;
-          this.newListName = '';
-          this.addToNewListData = res.data;
-          this.$nextTick(() => {
-            this.$refs.newListInput.focus();
-          });
+          this.addSongToNewList(res.data);
         }
         if (res.type === SYSTEM_EVENTS.ADD_TO_SONG_LIST) {
           songInfoService.songListEdit(
@@ -139,8 +153,74 @@
       },
     },
     methods: {
-      editItem(type) {
-
+      editItemName() {
+        this.selectedEditItem.index = this.contextMenuIdx;
+        this.selectedEditItem.name = this.songLists[this.contextMenuIdx].name;
+        this.selectedEditItem.action = 'edit';
+        this.contextMenuIdx = -1;
+        setTimeout(() => {
+          this.$refs.selectedEditItems.focus();
+        }, 100);
+      },
+      deleteItem() {
+        this.selectedEditItem.index = this.contextMenuIdx;
+        this.selectedEditItem.action = 'remove';
+        this.contextMenuIdx = -1;
+        this.$confirm({
+          content: () => '你确定要删除这个歌单吗?',
+          okText: '确定',
+          cancelText: '取消',
+          onOk: () => {
+            this.removeSongList();
+          },
+          onCancel: () => {
+            console.log('Cancel');
+          }
+        });
+      },
+      menuClick(e) {
+        if (e && e instanceof Function) {
+          e.apply(this);
+        }
+      },
+      renameSongList() {
+        if (!this.selectedEditItem.name || this.selectedEditItem.name === this.songLists[this.contextMenuIdx].name) {
+          this.selectedEditItem.index = -1;
+          return;
+        }
+        songInfoService.updateSongList({
+          name: this.selectedEditItem.name,
+          id: this.songLists[this.selectedEditItem.index].id
+        }).subscribe(res => {
+          if (res.code === 200) {
+            this.selectedEditItem.index = -1;
+            this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
+          } else {
+            this.$message.error('更新失败');
+            this.selectedEditItem.index = -1;
+          }
+        }, () => {
+          this.$message.error('更新失败');
+          this.selectedEditItem.index = -1;
+        });
+      },
+      removeSongList() {
+        songInfoService.removeSongList(
+         [this.songLists[this.selectedEditItem.index].id]
+        ).subscribe(res => {
+          this.contextMenuIdx = -1;
+          if (res.code === 200) {
+            this.selectSongList(this.selectedEditItem.index === this.songLists.length - 1 ? this.selectedEditItem.index - 1 : this.selectedEditItem.index);
+            this.selectedEditItem.index = -1;
+            this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
+            this.$message.success('删除成功');
+          } else {
+            this.$message.error('删除失败');
+          }
+        }, () =>  {
+          this.contextMenuIdx = -1;
+          this.$message.error('删除失败');
+        });
       },
       openRightMenu(e, idx) {
         this.closeRightMenu();
@@ -154,10 +234,7 @@
         });
       },
       closeRightMenu() {
-        this.contextMenuIdx = null;
-      },
-      sendEditListItem(idx) {
-
+        this.contextMenuIdx = -1;
       },
       addNewList() {
         if (!this.newListName.length) {
@@ -178,11 +255,9 @@
                 }
               ).subscribe(res => {
                 console.log(res);
-                if (res.body.code === 200) {
-                  this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
-                }
               })
             }
+            this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
           }
         });
       },
@@ -213,12 +288,30 @@
           type: SYSTEM_EVENTS.CHANGE_SONG_LIST,
           data: idx
         })
+      },
+      addSongToNewList(data = null) {
+        this.selectedKeys = [9];
+        this.addingNewList = true;
+        this.newListName = '';
+        this.addToNewListData = data;
+        this.$nextTick(() => {
+          this.$refs.newListInput.focus();
+        });
       }
     }
   }
 </script>
 
 <style lang="scss" scoped>
+  .outside-mask{
+    width: 100%;
+    z-index: 100;
+    height: 100%;
+    position: fixed;
+    background-color: unset;
+    left: 0;
+    top: 0;
+  }
   .left-menu-content{
     background-color: #F6F6F6;
      /deep/ .ant-menu.ant-menu-inline{
@@ -234,5 +327,8 @@
   }
   .song-list-item{
     overflow: visible;
+  }
+  .my-song-title{
+    @include flex(row, space-between, center)
   }
 </style>
