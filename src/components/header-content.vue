@@ -15,7 +15,7 @@
       </div>
       <div class="user-infos">
         <div v-if="userInfo.isLogin" class="user-infos-box">
-          <img class="user-avatar" :src="userInfo.userInfo.avatarUrl" alt="">
+          <img class="user-avatar" @click="logoutQuery()" :src="userInfo.userInfo.avatarUrl" alt="">
           <span>{{userInfo.isLogin ? userInfo.userInfo.nickname : '请登录'}}</span>
         </div>
         <div v-else class="user-header" @click="!userInfo.isLogin ? openLoginWindow() : gotoUserPage()">
@@ -31,7 +31,7 @@
           <template slot="title">
             <span>出于安全考虑，暂时只支持扫码登录，请使用网易云音乐app进行扫码</span>
           </template>
-          <a-button  type="primary" class="login-by-phone" @click="changeLoginProcess('loginByQR')">扫码登录</a-button>
+          <a-button  type="primary" class="login-by-qr" @click="changeLoginProcess('loginByQR')">扫码登录</a-button>
         </a-tooltip>
           <a-button class="register" :disabled="true" @click="changeLoginProcess('register')">注册</a-button>
       </div>
@@ -64,6 +64,7 @@
   import {fromEvent, interval, Subject} from "rxjs";
   import searchModal from './search-modal';
   import {searchService} from "./service/search.service";
+
   export default {
     name: 'header-content',
     components: {
@@ -90,13 +91,15 @@
     mounted() {
       setTimeout(() => {
         if (document.cookie.includes('__csrf')) {
-          UserInfos.cookie = document.cookie;
+          UserInfos.cookie = document.cookie + '; HTTPOnly;';
           UserInfos.isLogin = true;
           this.getLoginStatus();
         }
       }, 500);
       fromEvent(window, 'beforeunload').subscribe(() => {
-        UserInfos.setLocalData();
+        if (UserInfos.isLogin) {
+          UserInfos.setLocalData();
+        }
       });
       !this.searchInterval$ && (this.searchInterval$ = interval(5000).subscribe(() => {
         this.inSearchInterval = false;
@@ -129,6 +132,36 @@
       handleCancel() {
         this.visible = false;
         this.changeLoginProcess('loginHome');
+      },
+      logoutQuery() {
+        this.$confirm({
+          content: () => '你确定要登出吗?',
+          okText: '确定',
+          cancelText: '取消',
+          onOk: () => {
+            this.logout();
+          },
+          onCancel: () => {
+            console.log('Cancel');
+          }
+        });
+      },
+      logout() {
+        UserInfos.logout().subscribe(res => {
+          if (res.code === 200) {
+            UserInfos.cookie = '';
+            UserInfos.isLogin = false;
+            this.clearAllCookie();
+            location.reload(true);
+          }
+        });
+      },
+      clearAllCookie() {
+        const keys = document.cookie.match(/[^ =;]+(?=\=)/g)
+        if (keys) {
+          for (let i = keys.length; i--;)
+            document.cookie = keys[i] + '=0;expires=' + new Date(0).toUTCString()
+        }
       },
       openLoginWindow() {
         this.visible = true;
@@ -218,13 +251,17 @@
               } else if (res && res.code === 803) {
                 // 扫码成功
                 UserInfos.isLogin = true;
-                UserInfos.cookie = res.cookie;
                 // localStorage.setItem('cookie', res.cookie);
                 res.cookie.split(';;').forEach(item => {
                   console.log(item);
-                  item = item.split('HTTPOnly')[0];
-                  document.cookie = item;
-                })
+                  document.cookie = item.split('HTTPOnly')[0];
+                  if (item.split('HTTPOnly')[1]) {
+                    document.cookie = item.split('HTTPOnly')[1][0] === ';' ?
+                      item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1)[0] === ';' ? item.split('HTTPOnly')[1].slice(2, item.split('HTTPOnly')[1].length - 1) : item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1) :
+                      item.split('HTTPOnly')[1];
+                  }
+                });
+                UserInfos.cookie = document.cookie + '; HTTPOnly;';
                 // 需要将cookie保存并且设置到浏览器
                 this.getLoginStatus();
                 this.handleCancel();
@@ -254,12 +291,14 @@
             } else {
               UserInfos.isLogin = false;
               UserInfos.cookie = '';
+              this.clearAllCookie();
             }
           }
         }, () => {
           this.$message.error('获取用户信息失败, 请刷新页面重试或者重新登录');
           UserInfos.isLogin = false;
           UserInfos.cookie = '';
+          this.clearAllCookie();
         });
         UserInfos.getUserSubcount().subscribe(res => {
           console.log(res);
@@ -350,6 +389,7 @@
     @include flex(row, flex-start, center);
     .user-avatar{
       width: 30px;
+      cursor: pointer;
       height: 30px;
       border-radius: 30px;
     }

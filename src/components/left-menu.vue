@@ -4,7 +4,7 @@
       <span>useless player</span>
     </div>
     <a-menu
-      :default-selected-keys="[8]"
+      :default-selected-keys="[startKeyIdx]"
       :open-keys.sync="openKeys"
       mode="inline"
       :selectedKeys="selectedKeys"
@@ -33,7 +33,7 @@
       </a-sub-menu>
       <a-sub-menu key="sub3">
         <span slot="title" class="my-song-title"><span>我的歌单</span><a-icon @click.stop="addSongToNewList()" type="plus"></a-icon></span>
-        <a-menu-item class="song-list-item" v-if="addingNewList" :key="8 + songLists.length">
+        <a-menu-item class="song-list-item" v-if="addingNewList" :key="startKeyIdx + songLists.length">
           <a-tooltip :defaultVisible="true" placement="topLeft">
             <template slot="title">
               <span>请输入新歌单的名称</span>
@@ -41,21 +41,11 @@
             <a-input ref="newListInput" style="width: 100%;" v-model="newListName" @keypress.enter="addNewList()" @blur="addNewList()"/>
           </a-tooltip>
         </a-menu-item>
-<!--        <a-dropdown :trigger="['contextmenu']">-->
-          <a-menu-item class="song-list-item" @contextmenu.prevent.stop="openRightMenu($event, index)" @click="selectSongList(index)" :key="8 + index" v-for="(songList, index) in songLists">
+          <a-menu-item class="song-list-item" @contextmenu.prevent.stop="openRightMenu($event, index)" @click="selectSongList(index)" :key="startKeyIdx + index" v-for="(songList, index) in songLists">
             <span v-show=" selectedEditItem.action === 'edit'? selectedEditItem.index !== index: true">{{songList.name}}</span>
             <context-menu v-if="contextMenuIdx === index" :contextMenuIdx="contextMenuIdx" @action="menuClick($event)" :contextMenu="songListContextMenu" :position="position" @close="closeRightMenu()"></context-menu>
             <a-input ref="selectedEditItems" @click.stop="" v-show="selectedEditItem.index === index && selectedEditItem.action === 'edit'" style="width: 80%;" v-model="selectedEditItem.name" :defaultValue="songList.name" @keypress.enter="renameSongList()" @blur="renameSongList()"/>
           </a-menu-item>
-         <!-- <a-menu slot="overlay1">
-            <a-menu-item key="1" @click="editItem('remove')">
-              删除
-            </a-menu-item>
-            <a-menu-item key="2" @click="editItem('rename')">
-              重命名
-            </a-menu-item>
-          </a-menu>
-        </a-dropdown>-->
       </a-sub-menu>
     </a-menu>
     <div v-if="contextMenuIdx !== -1" class="outside-mask" @click.stop="closeRightMenu()" @contextmenu.prevent="closeRightMenu()">
@@ -77,12 +67,13 @@
       return {
         newListName: '',
         position: {},
-        contextMenuIdx: null,
+        contextMenuIdx: -1,
         addingNewList: false,
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
         subscription: [],
         selectedKeys: [0],
+        startKeyIdx: 8,
         uid: 0,
         addToNewListData: null,
         selectedEditItem: {index: -1},
@@ -266,7 +257,7 @@
           console.log(res);
           if (res.code === 200) {
             this.songLists = res.playlist;
-            this.selectedKeys = [8];
+            this.selectedKeys = [this.startKeyIdx];
             bully.setMessage({
               type,
               data: this.songLists
@@ -283,10 +274,19 @@
       titleClick(e) {
         console.log('titleClick', e);
       },
-      selectSongList(idx) {
+      selectSongList(idx = this.contextMenuIdx) {
+        const data = {
+          idx,
+          playSong: false
+        };
+        if (this.contextMenuIdx !== -1) {
+          this.closeRightMenu();
+          data.playSong = true;
+          this.selectedKeys = [idx + this.startKeyIdx];
+        }
         bully.setMessage({
           type: SYSTEM_EVENTS.CHANGE_SONG_LIST,
-          data: idx
+          data
         })
       },
       addSongToNewList(data = null) {

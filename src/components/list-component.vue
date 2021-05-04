@@ -188,7 +188,7 @@
             this.userInfo = UserInfos.userInfo;
           }
           if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
-            this.setCrtList(res.data);
+            this.setCrtList(res.data.idx, res.data.playSong);
           }
           if (res.type === SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND) {
             this.listInfo = res.data;
@@ -200,6 +200,9 @@
             }
             this.listInfo = res.data;
             this.setCrtList(this.crtListInfoIdx);
+          }
+          if (res.type === SYSTEM_EVENTS.GET_SONG_URL) {
+            this.getSongUrl();
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data === 'next') {
@@ -300,7 +303,7 @@
             }
           });
         },
-        getListDetail(switchList = false) {
+        getListDetail(switchList = false, playSong = false) {
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
@@ -313,7 +316,7 @@
                   }
                 });
                 this.songs = res.playlist.tracks;
-                if (!switchList) {
+                if (!switchList || playSong) {
                   this.getSongUrl();
                 }
               }
@@ -326,6 +329,9 @@
 
         },
         getSongUrl() {
+          if (!this.songs.length) {
+            return;
+          }
           songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {
             const data = {...this.songs[this.currentSongIdx], ...res.data[0]};
             bully.setMessage({
@@ -337,7 +343,7 @@
             this.$message.error('获取歌曲详情失败')
           });
         },
-        setCrtList(i) {
+        setCrtList(i, playSong = false) {
           if (this.searchMode) {
             this.searchMode = false;
             this.currentSongIdx = 0;
@@ -345,7 +351,7 @@
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
             this.crtListInfoIdx = i;
-            this.getListDetail(true);
+            this.getListDetail(true, playSong);
           } else {
             this.initCrtListInfo();
           }

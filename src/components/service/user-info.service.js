@@ -25,23 +25,26 @@ class UserInfoService{
       searchHistory: []
     };
   }
+  logout() {
+    return HTTPClient.get(`/logout`);
+  }
   loginByQr(time) {
-    return HTTPClient.get(`/login/qr/key?timerstamp=${time}`, {withCredentials: false});
+    return HTTPClient.get(`/login/qr/key?timerstamp=${time}`, {withCredentials: false, withTimeStamp: true});
   }
   createQr(key, time) {
-    return HTTPClient.get(`/login/qr/create?key=${key}&qrimg=true&timerstamp=${time}`, {withCredentials: false});
+    return HTTPClient.get(`/login/qr/create?key=${key}&qrimg=true&timerstamp=${time}`, {withCredentials: false, withTimeStamp: true});
   }
   setQrInterval(key, time) {
-    return HTTPClient.get(`/login/qr/check?key=${key}&timerstamp=${time}`, {withCredentials: false});
+    return HTTPClient.get(`/login/qr/check?key=${key}&timerstamp=${time}`, {withCredentials: false, withTimeStamp: true});
   }
   getUserAccount() {
-    return HTTPClient.post(`/user/account`, {cookie: UserInfos.cookie});
+    return HTTPClient.post(`/user/account`, {cookie: UserInfos.cookie}, { withTimeStamp: true});
   }
   getUserDetail(id) {
-    return HTTPClient.post(`/user/detail?uid=${id}`,{cookie: UserInfos.cookie});
+    return HTTPClient.post(`/user/detail?uid=${id}`,{cookie: UserInfos.cookie}, { withTimeStamp: true});
   }
   getUserSubcount() {
-    return HTTPClient.post(`/user/subcount`, {cookie: UserInfos.cookie});
+    return HTTPClient.post(`/user/subcount`, {cookie: UserInfos.cookie}, { withTimeStamp: true});
   }
 }
 class SettingService{

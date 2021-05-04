@@ -12,7 +12,8 @@ export const SYSTEM_EVENTS = {
   ADD_TO_SONG_LIST: 'add-to-song-list',
   ADD_TO_NEW_SONG_LIST: 'add-to-new-song-list',
   GOT_SONG_LIST_FROM_BACKEND: 'got-song-list-from-backend',
-  SONG_LIST_REFRESH_BY_GET_LIST: 'song-list-refresh-by-get-list'
+  SONG_LIST_REFRESH_BY_GET_LIST: 'song-list-refresh-by-get-list',
+  GET_SONG_URL: 'get-song-url'
 }
 export const APP = {
   MIN_WIDTH: 1080,
