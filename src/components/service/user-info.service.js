@@ -46,6 +46,13 @@ class UserInfoService{
   getUserSubcount() {
     return HTTPClient.post(`/user/subcount`, {cookie: UserInfos.cookie}, { withTimeStamp: true});
   }
+
+  getCountriesCodeList() {
+    return HTTPClient.get(`/countries/code/list`, {withCredentials: false, withTimeStamp: true});
+  }
+  loginByPassword(param) {
+    return HTTPClient.post(`/login/cellphone`, param , {withCredentials: false, withTimeStamp: true});
+  }
 }
 class SettingService{
   lyricsTimeAdjust = 0.3

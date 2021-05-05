@@ -33,6 +33,7 @@
           </template>
           <a-button  type="primary" class="login-by-qr" @click="changeLoginProcess('loginByQR')">扫码登录</a-button>
         </a-tooltip>
+          <a-button  type="primary" class="login-by-password" @click="changeLoginProcess('loginByPassword')">账号密码登录</a-button>
           <a-button class="register" :disabled="true" @click="changeLoginProcess('register')">注册</a-button>
       </div>
       <div v-else-if="loginProcess === 'register'" class="login-content">
@@ -41,6 +42,28 @@
       <div v-else-if="loginProcess === 'loginByQR'" class="login-content">
         <span>请使用网易云音乐app进行扫码</span>
         <img v-if="qr" :src="qr" alt="">
+      </div>
+      <div v-else-if="loginProcess === 'loginByPassword'" class="login-content">
+        <img class="phone-img" src="../assets/images/phone.png" alt="">
+        <div class="phone-form-area">
+          <a-input-group compact>
+            <a-select class="phone-area" :dropdownMatchSelectWidth="false" default-value="86" option-label-prop="label" v-model="selectedCountryCode" @change="phoneAreaChange()">
+              <a-select-option class="countries-list-item" :label="'+' + item.code" :key="index" v-for="(item, index) in countriesList" :value="item.code">
+                <span style="width: 80px">{{item.zh}}</span>
+                <span>+{{item.code}}</span>
+              </a-select-option>
+            </a-select>
+            <a-input class="phone-number" v-model="phone.phone" />
+          </a-input-group>
+        </div>
+        <div class="phone-form-area">
+          <a-input class="password-area" type="password" v-model="phone.password" placeholder="请输入密码">
+            <a-icon slot="prefix" type="lock" />
+          </a-input>
+        </div>
+        <div class="phone-button-area">
+          <a-button :disabled="!phone.phone || !phone.password" type="primary" class="login-by-password" @click="loginByPassword()">登录</a-button>
+        </div>
       </div>
       <div v-if="loginProcess !== 'loginHome'">
 <!--        <a-button key="back" @click="">-->
@@ -74,8 +97,11 @@
       return {
         qr: '',
         router: [],
+        countriesList: [],
         qrKey: '',
+        phone: {phone: '', password: ''},
         currentSearchData: {},
+        selectedCountryCode: '86',
         searchMusic: '',
         searchInputSubject$: new Subject(),
         inSearchInterval: false,
@@ -91,7 +117,7 @@
     mounted() {
       setTimeout(() => {
         if (document.cookie.includes('__csrf')) {
-          UserInfos.cookie = document.cookie + '; HTTPOnly;';
+          UserInfos.cookie = document.cookie;
           UserInfos.isLogin = true;
           this.getLoginStatus();
         }
@@ -104,6 +130,24 @@
       !this.searchInterval$ && (this.searchInterval$ = interval(5000).subscribe(() => {
         this.inSearchInterval = false;
       }));
+      UserInfos.getCountriesCodeList().subscribe(res => {
+        if (res.code === 200) {
+          const arr = [];
+          res.data.forEach(item => {
+            if (item.countryList && item.countryList.length) {
+              for (let sub of item.countryList) {
+                if (!arr.find(i => i.code === sub.code)) {
+                  arr.push(sub);
+                }
+              }
+              console.log(arr);
+            }
+          });
+          this.countriesList = arr;
+        } else {
+          this.countriesList = [];
+        }
+      });
     },
     methods: {
       showSearchListing(e) {
@@ -250,24 +294,27 @@
                 // 等待确认
               } else if (res && res.code === 803) {
                 // 扫码成功
-                UserInfos.isLogin = true;
-                // localStorage.setItem('cookie', res.cookie);
-                res.cookie.split(';;').forEach(item => {
-                  console.log(item);
-                  document.cookie = item.split('HTTPOnly')[0];
-                  if (item.split('HTTPOnly')[1]) {
-                    document.cookie = item.split('HTTPOnly')[1][0] === ';' ?
-                      item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1)[0] === ';' ? item.split('HTTPOnly')[1].slice(2, item.split('HTTPOnly')[1].length - 1) : item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1) :
-                      item.split('HTTPOnly')[1];
-                  }
-                });
-                UserInfos.cookie = document.cookie + '; HTTPOnly;';
-                // 需要将cookie保存并且设置到浏览器
-                this.getLoginStatus();
-                this.handleCancel();
+               this.loginSuccess(res);
               }
             });
         }, 1000);
+      },
+      loginSuccess(res) {
+        UserInfos.isLogin = true;
+        // localStorage.setItem('cookie', res.cookie);
+        res.cookie.split(';;').forEach(item => {
+          console.log(item);
+          document.cookie = item.split('HTTPOnly')[0];
+          if (item.split('HTTPOnly')[1]) {
+            document.cookie = item.split('HTTPOnly')[1][0] === ';' ?
+              item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1)[0] === ';' ? item.split('HTTPOnly')[1].slice(2, item.split('HTTPOnly')[1].length - 1) : item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1) :
+              item.split('HTTPOnly')[1];
+          }
+        });
+        UserInfos.cookie = document.cookie;
+        // 需要将cookie保存并且设置到浏览器
+        this.getLoginStatus();
+        this.handleCancel();
       },
       getLoginStatus() {
         UserInfos.getUserAccount().subscribe(res => {
@@ -311,9 +358,28 @@
         this.loginProcess = e;
         if (this.loginProcess === 'loginByQR') {
           this.getQR();
+        } else if (this.loginProcess === 'loginByPassword') {
+          clearInterval(this.intervalOfGetQR);
         } else {
           clearInterval(this.intervalOfGetQR);
         }
+      },
+      loginByPassword() {
+        if (this.phone.phone && this.phone.password) {
+          UserInfos.loginByPassword({
+            ...this.phone,
+            countrycode: this.selectedCountryCode
+          }).subscribe(res => {
+            if (res.code === 200) {
+              this.loginSuccess(res);
+            } else {
+              this.$message.error(res.message);
+            }
+          });
+        }
+      },
+      phoneAreaChange() {
+        console.log(this.selectedCountryCode);
       }
     }
   }
@@ -371,8 +437,24 @@
   }
   .login-modal{
     .login-content{
-      height: 200px;
+      height: auto;
+      min-height: 240px;
       @include flex(column, space-between, center);
+      .phone-img{
+        width: 270px;
+        height: 117px;
+      }
+      .phone-area{
+        width: 80px;
+        height: auto;
+      }
+      .phone-form-area{
+        @include flex(row, flex-start, center);
+        width: 75%;
+      }
+      /deep/ .phone-number{
+        width: calc(100% - 80px);
+      }
       .login-image{
         width: 203px;
         height: 107px;
@@ -400,5 +482,11 @@
       color: $blue;
       cursor: pointer;
     }
+  }
+</style>
+<style lang="scss">
+  .countries-list-item{
+    width: 200px;
+    @include flex(row, space-between, center)
   }
 </style>
