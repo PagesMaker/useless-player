@@ -130,24 +130,25 @@
       !this.searchInterval$ && (this.searchInterval$ = interval(5000).subscribe(() => {
         this.inSearchInterval = false;
       }));
-      UserInfos.getCountriesCodeList().subscribe(res => {
-        if (res.code === 200) {
-          const arr = [];
-          res.data.forEach(item => {
-            if (item.countryList && item.countryList.length) {
-              for (let sub of item.countryList) {
-                if (!arr.find(i => i.code === sub.code)) {
-                  arr.push(sub);
+      if (!UserInfos.isLogin) {
+        UserInfos.getCountriesCodeList().subscribe(res => {
+          if (res.code === 200) {
+            const arr = [];
+            res.data.forEach(item => {
+              if (item.countryList && item.countryList.length) {
+                for (let sub of item.countryList) {
+                  if (!arr.find(i => i.code === sub.code)) {
+                    arr.push(sub);
+                  }
                 }
               }
-              console.log(arr);
-            }
-          });
-          this.countriesList = arr;
-        } else {
-          this.countriesList = [];
-        }
-      });
+            });
+            this.countriesList = arr;
+          } else {
+            this.countriesList = [];
+          }
+        });
+      }
     },
     methods: {
       showSearchListing(e) {

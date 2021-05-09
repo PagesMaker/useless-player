@@ -20,27 +20,27 @@
               <span>精心完善歌单信息有机会获得推荐，让更多用户看到你的大作</span>
             </div>
             <div class="btn-area">
-              <a-button >
+              <a-button @click="getListDetail(false, true)">
                 <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
-              <a-button >
+              <!--<a-button @click="multiEdit('download')">
                 <a-icon type="download" title="下载"/>
                 <span>下载</span>
               </a-button>
-              <a-button >
+              <a-button @click="multiEdit('remove')">
                 <a-icon type="delete" title="删除" />
                 <span>删除</span>
               </a-button>
-              <a-button >
+              <a-button @click="multiEdit('sort')">
                 <a-icon type="menu" title="排序" />
                 <span>排序</span>
-              </a-button>
+              </a-button>-->
               <a-button v-if="!searchInList" @click="toggleSearch(true)">
                 <a-icon type="search" title="搜索" />
                 <span>搜索</span>
               </a-button>
-              <a-input v-model="searchText" v-else>
+              <a-input v-model="searchText" class="search-in-list" v-else @change="searchSongInList()" @blur="getSearchResultFromList()" @keypress.enter="getSearchResultFromList()">
                 <a-icon slot="prefix" @click="toggleSearch(false)" type="close" />
               </a-input>
               <a-button v-if="isEditMode">
@@ -50,38 +50,8 @@
           </div>
         </div>
         <div class="music-list-body">
-          <!--<a-tabs default-active-key="1" @change="tabChanged(e)" v-if>
-            <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
-              <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
-                <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index ? 'is-playing' : ''">
-                  <div slot="heart" class="heart-icon" >
-                    <a-icon class="blue-hover favourite-songs" type="heart"></a-icon>
-                    <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
-                  </div>
-                  <div class="edit-area" v-if="text.hover">
-                    <a-icon class="blue-hover" type="download" title="下载"/>
-                    <a-icon class="blue-hover" type="delete" title="从播放列表删除" />
-                    <a-icon class="blue-hover" type="message" title="评论" />
-                    <a-icon class="blue-hover" type="share-alt" title="分享" v-if="false" />&lt;!&ndash; todo 似乎网页不好做？待研究 &ndash;&gt;
-                    <a-icon class="blue-hover" type="plus-square" title="添加到" />
-                  </div>
-                </div>
-                <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
-                   <span v-for="(auth, index) in text" @click="jumpToAuthorPage(auth)">
-                        <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
-                   </span>
-                </span>
-                <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
-              </a-table>
-            </a-tab-pane>
-            <a-tab-pane key="2" tab="最近收藏">
-
-            </a-tab-pane>
-            <a-tab-pane key="3" tab="评论">
-
-            </a-tab-pane>
-          </a-tabs>-->
           <table-in-list
+            :currentListPlaying="crtListInfoIdx === playingListIdx"
             :search-mode="searchMode"
             :songs="searchMode ? currentSearchData : songs"
             :currentSongIdx="currentSongIdx"
@@ -89,6 +59,7 @@
             @hoverInRow="rowHover($event)"
             @changeCurrentSongIdx="getSongsDetail($event)"
             :isPlaySearchSong="isPlaySearchSong"
+            @handleTableChange="handleTableChange($event)"
             @scrollToBottom="getMoreSearchResult()"
           ></table-in-list>
         </div>
@@ -102,6 +73,9 @@
   import {UserInfos} from "./service/user-info.service";
   import {songInfoService} from "./service/song-info.service";
   import tableInList from "./table-in-list";
+  import {Subject} from "rxjs";
+  import {debounceTime} from "rxjs/operators";
+  import {PY} from "../assets/ChinesePY";
     export default {
       name: "list-component",
       components: {
@@ -114,8 +88,9 @@
           searchInList: false,
           searchText: '',
           isEditMode: false,
+          searchText$: new Subject(),
           crtListInfo: {},
-          playingList: [],
+          playingListIdx: 0,
           crtListInfoIdx: 0,
           songs: [],
           currentSearchData: [],
@@ -129,29 +104,25 @@
               title: '歌曲',
               dataIndex: 'rowName',
               fixed: 'left',
-              width: '40%',
-              scopedSlots: { customRender: 'name' }
+              width: '40%'
             },
             {
               title: '歌手',
               dataIndex: 'artists',
               fixed: 'left',
-              width: '20%',
-              scopedSlots: { customRender: 'singer' }
+              width: '20%'
             },
             {
               title: '专辑',
               dataIndex: 'album',
               fixed: 'left',
-              width: '20%',
-              scopedSlots: { customRender: 'album' }
+              width: '20%'
             },
             {
               title: '时长',
               dataIndex: 'duration',
               fixed: 'left',
-              width: '20%',
-              scopedSlots: { customRender: 'time' }
+              width: '20%'
             }
           ],
           columns: [
@@ -160,27 +131,36 @@
               dataIndex: 'rowName',
               fixed: 'left',
               width: '40%',
-              scopedSlots: { customRender: 'name' }
+              scopedSlots: { customRender: 'name' },
+              sorter: true,
+              sortDirections: ['descend', 'ascend']
             },
             {
               title: '歌手',
               dataIndex: 'ar',
               fixed: 'left',
               width: '28%',
-              scopedSlots: { customRender: 'singer' }
+              scopedSlots: { customRender: 'singer' },
+              sorter: true,
+              sortDirections: ['descend', 'ascend']
             },
             {
               title: '专辑',
               dataIndex: 'al',
               fixed: 'left',
               width: '30%',
-              scopedSlots: { customRender: 'album' }
+              scopedSlots: { customRender: 'album' },
+              sorter: true,
+              sortDirections: ['descend', 'ascend']
             }
           ]
         }
       },
       mounted() {
         this.initCrtListInfo();
+        const s = this.searchText$.asObservable().pipe(debounceTime(400)).subscribe(() => {
+          this.getSearchResultFromList();
+        });
         const sub =  bully.getMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
             this.getListInfo(res.data);
@@ -242,7 +222,7 @@
           }
 
         })
-        this.subscription.push(sub, subR);
+        this.subscription.push(sub, subR, s);
       },
       destroyed() {
         for (const ite of this.subscription) {
@@ -298,12 +278,13 @@
                   type: SYSTEM_EVENTS.PLAY_MUSIC,
                   data
                 });
+                this.playingListIdx = this.crtListInfoIdx;
                 this.isPlaySearchSong = true;
               });
             }
           });
         },
-        getListDetail(switchList = false, playSong = false) {
+        getListDetail(switchList = false, playSong = false, param) {
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
@@ -315,7 +296,15 @@
                     hover: false
                   }
                 });
-                this.songs = res.playlist.tracks;
+                if (param && param.sorter.order === 'ascend') {
+                  const field = param.sorter.field;
+                  this.songs = res.playlist.tracks.sort((a ,b) => this.compare(a[field].name || a[field][0].name, b[field].name || b[field][0].name) ? 1 : -1).map(item => {item.hidden = false; return item});
+                } else if (param && param.sorter.order === 'descend') {
+                  const field = param.sorter.field;
+                  this.songs = res.playlist.tracks.sort((a ,b) => this.compare(a[field].name || a[field][0].name, b[field].name || b[field][0].name) ? -1 : 1).map(item => {item.hidden = false; return item});
+                } else {
+                  this.songs = res.playlist.tracks.map(item => {item.hidden = false; return item});
+                }
                 if (!switchList || playSong) {
                   this.getSongUrl();
                 }
@@ -325,8 +314,22 @@
             });
           }
         },
+        compare(a, b) {
+          if (PY.getWordsCode(a)) {
+            a = PY.getWordsCode(a);
+          }
+          if (PY.getWordsCode(b)) {
+            b = PY.getWordsCode(b);
+          }
+          return a > b;
+        },
         getMoreSearchResult() {
 
+        },
+        handleTableChange(e) {
+          console.log(e);
+          // 暂时将该函数认为是sort的回调，因为翻页和筛选功能暂时不会去做
+          this.getListDetail(true, false, e);
         },
         getSongUrl() {
           if (!this.songs.length) {
@@ -338,6 +341,7 @@
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data: data
             });
+            this.playingListIdx = this.crtListInfoIdx;
             this.isPlaySearchSong = false;
           }, () => {
             this.$message.error('获取歌曲详情失败')
@@ -365,7 +369,15 @@
         toggleSearch(e) {
           this.searchInList = e;
           this.searchText = '';
-        }
+        },
+        searchSongInList() {
+          this.searchText$.next();
+        },
+        getSearchResultFromList() {
+            for (const item of this.songs) {
+              item.hidden = !(item.name.toLowerCase().includes(this.searchText.toLowerCase()) || (item.al && typeof item.al.name === 'string' && item.al.name.toLowerCase().includes(this.searchText.toLowerCase())) || (item.ar.length && item.ar.find(i => i.name.toLowerCase().includes(this.searchText.toLowerCase()))));
+            }
+          }
       }
     }
 </script>
@@ -418,6 +430,10 @@
           font-size: 1.8em;
           color: $black;
           font-weight: bold;
+        }
+        /deep/ .ant-input:focus{
+          border: none;
+          box-shadow: unset;
         }
         .user-infos-box{
           color: $black;
@@ -472,6 +488,15 @@
           /deep/ .ant-btn:hover{
             color: unset;
             background-color: #aaaaaa;
+            .anticon {
+              color: rgba(0, 0, 0, 0.65)
+            }
+          }
+          /deep/ .ant-btn:active{
+            color: unset;
+          }
+          /deep/ .ant-btn:focus{
+            color: unset;
           }
         }
       }

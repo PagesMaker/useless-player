@@ -2,22 +2,22 @@
   <div class="inside-table-listing">
     <a-tabs v-show="!searchMode" default-active-key="1" @change="tabChanged(e)">
       <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
-        <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
-          <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index ? 'is-playing' : ''">
+        <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" @change="handleTableChange" :customRow="setRowBehaviour">
+          <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''">
             <div slot="heart" class="heart-icon" >
               <a-icon class="blue-hover favourite-songs" type="heart"></a-icon>
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
+              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @handleDownload="handleDownload(index)" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
             </div>
           </div>
-          <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
+          <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
                    <span v-for="(auth, index) in text" @click="jumpToAuthorPage(auth)">
                         <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
+          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
         </a-table>
       </a-tab-pane>
       <a-tab-pane key="2" tab="最近收藏">
@@ -88,6 +88,9 @@
         this.subscription = null;
       },
       methods: {
+        handleTableChange(pagination, filters, sorter) {
+          this.$emit('handleTableChange', {pagination, filters, sorter});
+        },
         initShowIcons() {
           this.showIcon = ['comment', 'deleteFromList', 'download', 'shared', 'addToList'];
         },
@@ -103,18 +106,22 @@
               },  // 鼠标移入行
               mouseleave: () => {
                 this.$emit('hoverInRow', {idx, hover: false});
-                console.log('leave')
               },
               dblclick: () => {
                 this.$emit('changeCurrentSongIdx', data);
               }
             },
+            style: {
+              display: !data.hidden ? 'table-row' : 'none'
+            }
           };
         },
         jumpToAuthorPage(auth) {
         },
+        handleDownload(idx) {
+          console.log(this.songs[idx]);
+        },
         addToList(e, index) {
-          console.log(index, this.songs)
           bully.setMessage({
             type: SYSTEM_EVENTS.ADD_TO_SONG_LIST,
             data: {
@@ -134,13 +141,12 @@
           });
         },
         removeShowIcons(...data) {
-          console.log(data);
           data.forEach(item => {
             this.showIcon = this.showIcon.filter(it => it !== item);
           })
         }
       },
-      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong'],
+      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying'],
       watch: {
         searchMode: {
           handler(e) {
