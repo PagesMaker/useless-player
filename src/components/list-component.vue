@@ -52,6 +52,7 @@
         <div class="music-list-body">
           <table-in-list
             :currentListPlaying="crtListInfoIdx === playingListIdx"
+            :crtListInfo="crtListInfo"
             :search-mode="searchMode"
             :songs="searchMode ? currentSearchData : songs"
             :currentSongIdx="currentSongIdx"
@@ -104,25 +105,33 @@
               title: '歌曲',
               dataIndex: 'rowName',
               fixed: 'left',
-              width: '40%'
+              width: '40%',
+              ellipsis: true,
+              scopedSlots: { customRender: 'name' }
             },
             {
               title: '歌手',
               dataIndex: 'artists',
               fixed: 'left',
-              width: '20%'
+              width: '25%',
+              ellipsis: true,
+              scopedSlots: { customRender: 'singer' }
             },
             {
               title: '专辑',
               dataIndex: 'album',
               fixed: 'left',
-              width: '20%'
+              width: '25%',
+              ellipsis: true,
+              scopedSlots: { customRender: 'album' }
             },
             {
               title: '时长',
               dataIndex: 'duration',
               fixed: 'left',
-              width: '20%'
+              width: '10%',
+              ellipsis: true,
+              scopedSlots: { customRender: 'time' }
             }
           ],
           columns: [
@@ -180,28 +189,36 @@
             }
             this.listInfo = res.data;
             this.setCrtList(this.crtListInfoIdx);
+            if (res.exData) {
+              bully.setMessage({
+                type: SYSTEM_EVENTS.SWITCH_AFTER_REMOVE_SONG,
+                data: res.exData
+              })
+            }
           }
           if (res.type === SYSTEM_EVENTS.GET_SONG_URL) {
             this.getSongUrl();
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
-            if (res.data === 'next') {
+            if (res.data.type === 'next') {
               if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
                 this.$message.warning('已经是最后一首了');
                 return;
               }
-              this.currentSongIdx++;
+              if (res.data.switchSong) {
+                this.currentSongIdx++;
+              }
               this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
-            } else if (res.data === 'last') {
+            } else if (res.data.type === 'prev') {
               if (this.currentSongIdx - 1 < 0) {
                 this.$message.warning('已经是第一首了');
                 return;
               }
               this.currentSongIdx--;
               this.searchMode && this.isPlaySearchSong? this.getSongsDetail() : this.getListDetail();
-            } else if (res.data === 'current') {
+            } else if (res.data.type === 'current') {
               this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
-            } else if (res.data === 'list loop') {
+            } else if (res.data.type === 'list loop') {
               if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
                 this.currentSongIdx = 0;
                 this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
@@ -212,7 +229,7 @@
         const subR = bully.getRMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.SEARCH_KEYWORDS) {
             console.log(res.data);
-            this.currentSearchData = [...this.currentSearchData, ...res.data.data[res.data.type]];
+            this.currentSearchData = res.data.data[res.data.type];
             // this.currentSongIdx = -1;
             this.searchMode = true;
             this.hasMore = res.data.data.hasMore;

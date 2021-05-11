@@ -113,12 +113,12 @@
         if (res.type === SYSTEM_EVENTS.ADD_TO_SONG_LIST) {
           songInfoService.songListEdit(
             res.data
-          ).subscribe(res => {
-            console.log(res);
-            if (res.body.code === 200) {
-              this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH);
-            } else if (res.body.code === 502) {
-              this.$message.warning(res.body.message);
+          ).subscribe(response => {
+            console.log(response);
+            if (response.body.code === 200) {
+              this.getList(SYSTEM_EVENTS.SONG_LIST_REFRESH, res.data);
+            } else if (response.body.code === 502) {
+              this.$message.warning(response.body.message);
             }
           })
         }
@@ -252,7 +252,7 @@
           }
         });
       },
-      getList(type) {
+      getList(type, data) {
         songInfoService.getUserPlaylist(this.uid).subscribe(res => {
           console.log(res);
           if (res.code === 200) {
@@ -260,7 +260,8 @@
             this.selectedKeys = [this.startKeyIdx];
             bully.setMessage({
               type,
-              data: this.songLists
+              data: this.songLists,
+              exData: data
             });
           }
         }, () => {

@@ -8,6 +8,7 @@ export const SYSTEM_EVENTS = {
   SEARCH_KEYWORDS: 'search-keywords',
   GOT_SEARCH_RESULT: 'got-search-result',
   SONG_LIST_REFRESH: 'song-list-refresh',
+  SWITCH_AFTER_REMOVE_SONG: 'switch-after-remove-song',
   GET_SONG_LIST: 'get-song-list',
   ADD_TO_SONG_LIST: 'add-to-song-list',
   ADD_TO_NEW_SONG_LIST: 'add-to-new-song-list',

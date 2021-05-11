@@ -1,6 +1,6 @@
 <template>
   <div class="inside-table-listing">
-    <a-tabs v-show="!searchMode" default-active-key="1" @change="tabChanged(e)">
+    <a-tabs v-if="!searchMode" default-active-key="1" @change="tabChanged(e)">
       <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
         <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" @change="handleTableChange" :customRow="setRowBehaviour">
           <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''">
@@ -9,7 +9,16 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @handleDownload="handleDownload(index)" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
+              <icon-group
+                :showIcon="showIcon"
+                :idx="index"
+                @cancelAddToList="currentSelectedRow = $event"
+                @handleDownload="handleDownload(index)"
+                @handleRemove="handleRemove(index)"
+                @handleComment="handleComment(index)"
+                @addToList="addToList($event, index)"
+                @addToNewList="addToNewList(index)"
+              ></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -29,7 +38,7 @@
     </a-tabs>
 
 
-    <a-tabs v-show="searchMode" default-active-key="1" @change="tabChanged(e)">
+    <a-tabs v-if="searchMode" default-active-key="1" @change="tabChanged(e)">
       <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
         <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" :customRow="setRowBehaviour">
           <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''">
@@ -38,7 +47,16 @@
               <span :title="text.name" class="blue-hover song-name">{{ text.name }}</span>
             </div>
             <div class="edit-area" v-if="text.hover">
-              <icon-group :showIcon="showIcon" :idx="index" @cancelAddToList="currentSelectedRow = $event" @addToList="addToList($event, index)" @addToNewList="addToNewList(index)"></icon-group>
+              <icon-group
+                :showIcon="showIcon"
+                :idx="index"
+                @cancelAddToList="currentSelectedRow = $event"
+                @handleDownload="handleDownload(index)"
+                @handleRemove="handleRemove(index)"
+                @handleComment="handleComment(index)"
+                @addToList="addToList($event, index)"
+                @addToNewList="addToNewList(index)"
+              ></icon-group>
             </div>
           </div>
           <span slot="singer" :title="getTitle(text)" class="row-of-singer" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">
@@ -46,7 +64,7 @@
                         <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
+          <span slot="album":title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
           <span slot="time" :title="text" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text / 1000 | timeFormat('mm:ss')}}</span>
 
         </a-table>
@@ -78,6 +96,7 @@
         const subR = bully.getRMessage().subscribe(res => {
         })
         this.subscription.push(subR);
+        console.log(this.songs)
       },
       destroyed() {
         for (const ite of this.subscription) {
@@ -120,6 +139,38 @@
         },
         handleDownload(idx) {
           console.log(this.songs[idx]);
+          songInfoService.getSongDetail(this.songs[idx].id).subscribe(async res => {
+            if (res.code === 200) {
+              for (const item of res.data) {
+                let response = await fetch(item.url);
+                let blob = await response.blob();
+                let objectUrl = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = `${this.songs[idx].name}.${item.type}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              }
+            } else {
+              this.$message.error('获取歌曲地址失败');
+            }
+          }, () => {
+            this.$message.error('获取歌曲地址失败');
+          });
+        },
+        handleRemove(idx) {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.ADD_TO_SONG_LIST,
+            data: {
+              op: 'del',
+              tracks: this.songs[idx].id,
+              pid: this.crtListInfo.id
+            }
+          });
+        },
+        handleComment(idx) {
+          // todo
         },
         addToList(e, index) {
           bully.setMessage({
@@ -146,7 +197,7 @@
           })
         }
       },
-      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying'],
+      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying', 'crtListInfo'],
       watch: {
         searchMode: {
           handler(e) {

@@ -2,8 +2,8 @@
     <div class="icon-group-wrapper">
       <div class="icon-group" ref="iconGroup">
         <a-icon class="blue-hover" v-show="showIcon.includes('download')" @click="download()" type="download" title="下载"/>
-        <a-icon class="blue-hover" v-show="showIcon.includes('deleteFromList')" type="delete" title="从播放列表删除" />
-        <a-icon class="blue-hover" v-show="showIcon.includes('comment')" type="message" title="评论" />
+        <a-icon class="blue-hover" v-show="showIcon.includes('deleteFromList')" @click="remove()" type="delete" title="从播放列表删除" />
+        <a-icon class="blue-hover" v-show="showIcon.includes('comment')" @click="comment()" type="message" title="评论" />
         <a-icon class="blue-hover" v-show="showIcon.includes('shared')" type="share-alt" title="分享" /><!-- todo 似乎网页不好做？待研究 -->
         <a-dropdown :getPopupContainer="getPopupContainer" v-show="showIcon.includes('addToList')" :placement="placement" :trigger="['click']"
                     overlayClassName="add-to-list-overlay-content">
@@ -69,6 +69,12 @@
         },
         download() {
           this.$emit('handleDownload');
+        },
+        remove(data = {}) {
+          this.$emit('handleRemove', data.id);
+        },
+        comment() {
+          this.$emit('handleCommetn');
         },
         openAddToListModal(idx) {
           // this.$emit('addToList', idx);

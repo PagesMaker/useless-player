@@ -38,7 +38,7 @@
         <div v-if="musicControl.playMode === 'single'" @click="switchPlayMode('list loop')" class="single-song-loop">
           <a-icon type="sync" title="单曲循环"/>
           <span>1</span></div>
-        <a-icon type="step-backward" @click="switchMusic('last')" title="上一首"/>
+        <a-icon type="step-backward" @click="switchMusic('prev')" title="上一首"/>
         <a-icon v-show="isPaused" @click="switchPlayStatus()" type="play-circle" title="播放" theme="filled"/>
         <a-icon v-show="!isPaused" @click="switchPlayStatus()" type="pause-circle" title="暂停" theme="filled"/>
         <a-icon type="step-forward" @click="switchMusic('next')" title="下一首"/>
@@ -149,29 +149,29 @@
       switchMusic(e) {
         bully.setMessage({
           type: SYSTEM_EVENTS.SWITCH_SONG,
-          data: e
+          data: {type: e, switchSong: true}
         })
       },
-      autoSwitchMusic() {
+      autoSwitchMusic(switchSong = true) {
         switch (this.musicControl.playMode) {
           case "list": {
             bully.setMessage({
               type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: 'next'
+              data: {type : 'next', switchSong}
             })
             break;
           }
           case "single": {
             bully.setMessage({
               type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: 'current'
+              data: {type : 'current', switchSong}
             })
             break;
           }
           case "list loop": {
             bully.setMessage({
               type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: 'list loop'
+              data: {type : 'list loop', switchSong}
             })
             break;
           }
@@ -276,6 +276,14 @@
             });
           } catch (e) {
             console.log(e);
+          }
+        }
+        if (res.type === SYSTEM_EVENTS.SWITCH_AFTER_REMOVE_SONG) {
+          console.log(res.data);
+          if (res.data.op === 'del') {
+            if (res.data.tracks === this.songInfo.id) {
+              this.autoSwitchMusic(false);
+            }
           }
         }
       });
