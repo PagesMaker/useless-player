@@ -11,7 +11,6 @@
             <div class="edit-area" v-if="text.hover">
               <icon-group
                 :showIcon="showIcon"
-                :idx="index"
                 @cancelAddToList="currentSelectedRow = $event"
                 @handleDownload="handleDownload(index)"
                 @handleRemove="handleRemove(index)"

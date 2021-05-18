@@ -13,7 +13,7 @@ Vue.use(Router)
 export default new Router({
 	routes: [
 		{
-			path: '/',
+			path: '/list',
 			name: 'app',
 			component: App,
 			children: [
@@ -23,13 +23,15 @@ export default new Router({
 					component: mainContent,
           children: [
             {
-              path: '/',
+              path: '',
               name: 'list-view',
-              component: listComponent
+              component: listComponent,
+              active: true
             }
           ]
 				}
 			]
-		}
+		},
+    { path: '*', redirect: '/list' }
 	]
 })

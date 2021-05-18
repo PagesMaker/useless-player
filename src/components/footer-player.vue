@@ -22,12 +22,14 @@
           </div>
           <div class="function-area">
             <!--            <a-icon type="heart" title="我喜欢" :theme="songInfo.isLikeHover ? 'filled': 'outlined'" :style="{'color' : songInfo.isLike ? 'red' : 'rgba(0, 0, 0, 0.65)'}" />-->
-            <a-icon type="download" title="下载"/>
-            <a-icon type="delete" title="从播放列表删除"/>
-            <a-icon type="message" title="评论"/>
-            <a-icon type="share-alt" title="分享" v-if="false"/><!-- todo -->
-            <a-icon type="plus-square" title="添加到"/>
-            <div class="add-to-song-list" v-if="addToSongListShow"></div>
+            <icon-group
+              :showIcon="showIcon"
+              @handleDownload="handleDownload()"
+              @handleRemove="handleRemove()"
+              @handleComment="handleComment()"
+              @addToList="addToList($event)"
+              @addToNewList="addToNewList()"
+            ></icon-group>
           </div>
         </div>
       </div>
@@ -90,16 +92,19 @@
   import {debounceTime, throttleTime} from 'rxjs/operators';
   import processBar from './process-bar';
   import musicDetail from './music-detail';
+  import iconGroup from './icon-group';
   import {UserInfos} from "./service/user-info.service";
   import {songInfoService} from "./service/song-info.service";
   export default {
     name: 'footer-player',
     components: {
       processBar,
-      musicDetail
+      musicDetail,
+      iconGroup
     },
     data() {
       return {
+        showIcon: [],
         addToSongListShow: false,
         currentTime: 0,
         sound: 50,
@@ -177,6 +182,59 @@
           }
         }
       },
+      handleDownload() {
+        songInfoService.getSongDetail(this.songInfo.id).subscribe(async res => {
+          if (res.code === 200) {
+            for (const item of res.data) {
+              let response = await fetch(item.url);
+              let blob = await response.blob();
+              let objectUrl = window.URL.createObjectURL(blob);
+              let a = document.createElement('a');
+              a.href = objectUrl;
+              a.download = `${this.songInfo.name}.${item.type}`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+          } else {
+            this.$message.error('获取歌曲地址失败');
+          }
+        }, () => {
+          this.$message.error('获取歌曲地址失败');
+        });
+      },
+      handleRemove() {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.ADD_TO_SONG_LIST,
+          data: {
+            op: 'del',
+            tracks: this.songInfo.id,
+            pid: this.songInfo.crtListId
+          }
+        });
+      },
+      handleComment() {
+        // todo
+      },
+      addToList(e) {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.ADD_TO_SONG_LIST,
+          data: {
+            op: 'add',
+            tracks: this.songInfo.id,
+            pid: e
+          }
+        });
+      },
+      addToNewList() {
+        bully.setMessage({
+          type: SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST,
+          data: {
+            op: 'add',
+            tracks: this.songInfo.id,
+          }
+        });
+      },
       getMusic(musicId) {
         return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
       },
@@ -227,6 +285,7 @@
       }
     },
     mounted() {
+      this.showIcon = ['comment', 'deleteFromList', 'download', 'addToList'];
       this.changeProcess$.asObservable().pipe(debounceTime(500)).subscribe(e => {
         this.player.currentTime = this.getSongTime * (e / 100);
       });

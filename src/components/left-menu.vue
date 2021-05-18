@@ -257,7 +257,9 @@
           console.log(res);
           if (res.code === 200) {
             this.songLists = res.playlist;
-            this.selectedKeys = [this.startKeyIdx];
+            if (type !== SYSTEM_EVENTS.SONG_LIST_REFRESH) {
+              this.selectedKeys = [this.startKeyIdx];
+            }
             bully.setMessage({
               type,
               data: this.songLists,

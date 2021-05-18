@@ -76,9 +76,7 @@
         comment() {
           this.$emit('handleCommetn');
         },
-        openAddToListModal(idx) {
-          // this.$emit('addToList', idx);
-          console.log(idx);
+        openAddToListModal() {
           this.showAddToListModal = true;
           bully.setMessage({
             type: SYSTEM_EVENTS.GET_SONG_LIST,
@@ -92,7 +90,7 @@
           this.$emit('cancelAddToList');
         },
       },
-      props: ['showIcon', 'idx']
+      props: ['showIcon']
     }
 </script>
 

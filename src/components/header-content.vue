@@ -29,7 +29,7 @@
         <div class="login-image"></div>
         <a-tooltip placement="topLeft">
           <template slot="title">
-            <span>出于安全考虑，暂时只支持扫码登录，请使用网易云音乐app进行扫码</span>
+            <span>出于安全考虑，最好使用扫码登录，请使用网易云音乐app进行扫码</span>
           </template>
           <a-button  type="primary" class="login-by-qr" @click="changeLoginProcess('loginByQR')">扫码登录</a-button>
         </a-tooltip>

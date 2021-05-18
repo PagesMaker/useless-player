@@ -353,12 +353,12 @@
             return;
           }
           songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {
-            const data = {...this.songs[this.currentSongIdx], ...res.data[0]};
+            this.playingListIdx = this.crtListInfoIdx;
+            const data = {...this.songs[this.currentSongIdx], ...res.data[0], crtListId: this.crtListInfo.id};
             bully.setMessage({
               type: SYSTEM_EVENTS.PLAY_MUSIC,
               data: data
             });
-            this.playingListIdx = this.crtListInfoIdx;
             this.isPlaySearchSong = false;
           }, () => {
             this.$message.error('获取歌曲详情失败')
