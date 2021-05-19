@@ -256,7 +256,6 @@
             for (let key in searchService.searchEnum) {
               if (searchService.searchEnum.hasOwnProperty(key)) {
                 if (searchService.searchEnum[key] === data.type) {
-                  this.$router.push({path:'/'});
                   res.result[key].forEach(item => {
                     item.rowName = {
                       name: item.name,

@@ -12,22 +12,22 @@
     >
       <a-sub-menu key="sub1" @titleClick="titleClick">
         <span slot="title"><span>在线音乐</span></span>
-          <a-menu-item key="1">
+          <a-menu-item :key="1">
               <a-icon type="customer-service" />音乐馆
           </a-menu-item>
-          <a-menu-item key="2">
+          <a-menu-item :key="2">
               <a-icon type="video-camera" />视频
           </a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub2" @titleClick="titleClick">
         <span slot="title"><span>我的音乐</span></span>
-        <a-menu-item key="5">
+        <a-menu-item :key="3">
           <a-icon type="star" />我喜欢
         </a-menu-item>
-        <a-menu-item key="6">
+        <a-menu-item :key="4">
           <a-icon type="history" />播放历史
         </a-menu-item>
-        <a-menu-item key="7">
+        <a-menu-item :key="5">
           <a-icon type="menu" />试听列表
         </a-menu-item>
       </a-sub-menu>
@@ -73,7 +73,7 @@
         songLists: [],
         subscription: [],
         selectedKeys: [0],
-        startKeyIdx: 8,
+        startKeyIdx: 6,
         uid: 0,
         addToNewListData: null,
         selectedEditItem: {index: -1},
@@ -273,6 +273,9 @@
       handleClick(e) {
         console.log('click', e);
         this.selectedKeys = [e.key];
+        if (e.key === 1) {
+          this.$router.push({name : 'main-page'});
+        }
       },
       titleClick(e) {
         console.log('titleClick', e);

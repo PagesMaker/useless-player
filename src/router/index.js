@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import mainContent from '@/components/main-content'
 import App from '@/App'
 import listComponent from '@/components/list-component'
+import mainPageComponent from '@/components/main-page'
 const originalPush = Router.prototype.push
 
 Router.prototype.push = function push(location) {
@@ -13,20 +14,24 @@ Vue.use(Router)
 export default new Router({
 	routes: [
 		{
-			path: '/list',
+			path: '/',
 			name: 'app',
 			component: App,
 			children: [
 				{
 					path: '',
-					name: 'main',
+					name: 'main-content',
 					component: mainContent,
           children: [
             {
-              path: '',
+              path: '/list',
               name: 'list-view',
-              component: listComponent,
-              active: true
+              component: listComponent
+            },
+            {
+              path: '/main-page',
+              name: 'main-page',
+              component: mainPageComponent
             }
           ]
 				}
