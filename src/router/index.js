@@ -14,7 +14,7 @@ Vue.use(Router)
 export default new Router({
 	routes: [
 		{
-			path: '/',
+			path: '',
 			name: 'app',
 			component: App,
 			children: [
@@ -24,7 +24,7 @@ export default new Router({
 					component: mainContent,
           children: [
             {
-              path: '/list',
+              path: '/',
               name: 'list-view',
               component: listComponent
             },
