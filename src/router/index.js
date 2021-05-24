@@ -26,7 +26,8 @@ export default new Router({
             {
               path: '/',
               name: 'list-view',
-              component: listComponent
+              component: listComponent,
+              meta: { keepAlive:true }
             },
             {
               path: '/main-page',
@@ -37,6 +38,6 @@ export default new Router({
 				}
 			]
 		},
-    { path: '*', redirect: '/list' }
+    { path: '*', redirect: '/' }
 	]
 })

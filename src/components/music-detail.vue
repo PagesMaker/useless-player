@@ -71,6 +71,9 @@
         changeLyricsProcess(time) {
           this.currentTime = time + this.startTime;
           console.log(time);
+          if (!(this.$refs.lyricsRow && this.$refs.lyricsRow.length)) {
+            return;
+          }
           if (this.$refs.lyricsRow[0] && this.time.findIndex(item => this.currentTime > item[0] && this.currentTime < item[1]) !== this.lyricsProcess) {
             this.currentTimePercent = 0;
             const idx = this.time.findIndex(item => this.currentTime > item[0] && this.currentTime < item[1]);

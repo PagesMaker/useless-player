@@ -1,7 +1,23 @@
 <template>
       <div class="selection-music-content">
         <div class="carousel">
-          <a-carousel :after-change="onCarouselChange">
+          <a-carousel :after-change="onCarouselChange" arrows :autoplay="true" :autoplaySpeed="5000">
+            <div
+              slot="prevArrow"
+              slot-scope="props"
+              class="custom-slick-arrow"
+              style="left: 10px"
+            >
+              <a-icon type="left-circle" />
+            </div>
+            <div
+              slot="nextArrow"
+              slot-scope="props"
+              class="custom-slick-arrow"
+              style="right: 10px"
+            >
+              <a-icon type="right-circle" />
+            </div>
             <div class="carousel-pics" v-for="(item, index) in carouselInfo" @click="redirectPage(item)">
               <div class="carousel-pics-bg" :style="{backgroundImage: item.pic ? 'url(' + item.pic + ')' : 'unset'}"></div>
               <div class="carousel-pics-content">
@@ -54,26 +70,50 @@
     @include flex(column, flex-start, center);
     .carousel{
       width: 98%;
-      height: 25%;
       /deep/ .ant-carousel{
         width: $max;
-        height: $max;
         .slick-slide {
           text-align: center;
+          height: 2rem;
           overflow: hidden;
           background-color: black;
         }
+        .carousel-pics{
+          height: 2rem;
+        }
         .carousel-pics-bg{
           position: absolute;
-          background-color: #fff;
-          filter: blur(8px);
-          width: $max;
-          height: $max;
-          z-index: $z1e3;
-          opacity: 0.35;
+          width: 100%;
+          height: 2rem;
+          z-index: 1000;
+          opacity: 0.3;
           background-repeat: no-repeat;
-          background-size: $max,$max;
-          background-attachment: fixed;
+          background-size: 100%,100%;
+          background-attachment: local;
+        }
+        .carousel-pics-content{
+          @include flex(row, center, center);
+          >img{
+            z-index: $z1e4;
+            cursor: pointer;
+            height: 2rem;
+            width: 54%;
+          }
+        }
+        .custom-slick-arrow {
+          width: 25px;
+          height: 25px;
+          font-size: 25px;
+          z-index: $z1e4;
+          color: #fff;
+          background-color: rgba(31, 45, 61, 0.11);
+          opacity: 0.3;
+        }
+        .custom-slick-arrow:before {
+          display: none;
+        }
+       .custom-slick-arrow:hover {
+          opacity: 0.5;
         }
       }
     }

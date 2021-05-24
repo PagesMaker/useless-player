@@ -58,6 +58,7 @@
   import {SYSTEM_EVENTS} from "../Const";
   import {songInfoService} from "./service/song-info.service";
   import contextMenu from './context-menu';
+  import {UserInfos} from "./service/user-info.service";
   export default {
     name: "left-menu",
     components: {
@@ -106,6 +107,10 @@
             this.uid = res.data.data.id;
             this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
           }
+        }
+        if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
+          this.uid = res.data.id;
+          this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
         }
         if (res.type === SYSTEM_EVENTS.ADD_TO_NEW_SONG_LIST) {
           this.addSongToNewList(res.data);
@@ -272,9 +277,14 @@
       },
       handleClick(e) {
         console.log('click', e);
+        if (this.selectedKeys[0] === e.key) {
+          return;
+        }
         this.selectedKeys = [e.key];
         if (e.key === 1) {
           this.$router.push({name : 'main-page'});
+        } else if (e.key >= 6) {
+          this.$router.push({name : 'list-view'});
         }
       },
       titleClick(e) {

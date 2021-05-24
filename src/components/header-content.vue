@@ -322,7 +322,7 @@
           if (res.code === 200) {
             if (res.account){
               this.account = res.account;
-              UserInfos.userInfo = res.profile;
+              UserInfos.userInfo = {...res.profile, ...res.account};
               this.userInfo = UserInfos;
               console.log(res.profile)
               UserInfos.getUserDetail(res.account.id).subscribe(resp => {

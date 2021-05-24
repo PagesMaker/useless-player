@@ -4,7 +4,9 @@
       <header-content></header-content>
     </div>
     <div class="main-content">
-      <router-view/>
+      <keep-alive>
+        <router-view/>
+      </keep-alive>
     </div>
     <div class="footer-player">
       <footer-player></footer-player>

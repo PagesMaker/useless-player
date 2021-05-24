@@ -170,10 +170,13 @@
         const s = this.searchText$.asObservable().pipe(debounceTime(400)).subscribe(() => {
           this.getSearchResultFromList();
         });
+        if (UserInfos.userInfo.id) {
+          console.log(UserInfos);
+          this.getListInfo(UserInfos.userInfo);
+        }
         const sub =  bully.getMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
             this.getListInfo(res.data);
-            console.log(UserInfos);
             this.userInfo = UserInfos.userInfo;
           }
           if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
