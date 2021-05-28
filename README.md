@@ -1,22 +1,19 @@
 # useless-player
 
-> A Vue.js project
+> 一个仿网易云音乐播放器
 
-## Build Setup
+#### 不一定最强大但是也不一定最好用的网易云播放器（代码也是偷的）
 
-``` bash
-# install dependencies
-npm install
+#### 技术栈：
+1. Vue2
+2. Antd
+### api支持：
+[网易云API](https://github.com/Binaryify/NeteaseCloudMusicApi)
 
-# serve with hot reload at localhost:8080
-npm run dev
+### 备注
+需先clone并运行[网易云API](https://github.com/Binaryify/NeteaseCloudMusicApi)
 
-# build for production with minification
-npm run build
 
-# build for production and view the bundle analyzer report
-npm run build --report
-```
-# 不一定最强大但是也不一定最好用的网易云播放器（代码也是偷的）
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
+
