@@ -14,7 +14,9 @@ export const SYSTEM_EVENTS = {
   ADD_TO_NEW_SONG_LIST: 'add-to-new-song-list',
   GOT_SONG_LIST_FROM_BACKEND: 'got-song-list-from-backend',
   SONG_LIST_REFRESH_BY_GET_LIST: 'song-list-refresh-by-get-list',
-  GET_SONG_URL: 'get-song-url'
+  GET_SONG_URL: 'get-song-url',
+  HOMEPAGE_BANNER: 'HOMEPAGE_BANNER',
+  HOMEPAGE_BLOCK_PLAYLIST_RCMD: 'HOMEPAGE_BLOCK_PLAYLIST_RCMD'
 }
 export const APP = {
   MIN_WIDTH: 1080,

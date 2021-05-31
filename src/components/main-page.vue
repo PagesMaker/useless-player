@@ -62,13 +62,13 @@
     }
     .main-page-tabs{
       width: $max;
-      height: $max;
+      height: calc(100% - 2em - 15px);
       /deep/ .ant-tabs{
         width: $max;
         height: $max;
         .ant-tabs-content{
           width: $max;
-          height: $max;
+          height: calc(100% - 46px - 16px);
           overflow: auto;
         }
       }
