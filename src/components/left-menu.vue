@@ -342,7 +342,7 @@
     font-size: 26px;
   }
   .song-list-item{
-    overflow: visible;
+    overflow: hidden;
   }
   .my-song-title{
     @include flex(row, space-between, center)
