@@ -19,7 +19,7 @@
               <a-icon type="right-circle" />
             </div>
             <div class="carousel-pics" v-for="(item, index) in carouselInfo" @click="redirectPage(item)">
-              <div class="carousel-pics-bg" v-show="index === currentCarouselIdx" :style="{backgroundImage: item.pic ? 'url(' + item.pic + ')' : 'unset'}"></div>
+              <div class="carousel-pics-bg" v-show="index === currentCarouselIdx" :style="{backgroundImage: item.pic ? 'url(' + item.pic + '?param=250y250' + ')' : 'unset'}"></div>
               <div class="carousel-pics-content">
                 <img :src="item.pic" alt="">
               </div>
@@ -38,7 +38,7 @@
           <div class="list-netease-content">
             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
               <div class="list-bg-wrapper"  @mouseenter="item.selectedIndex = index"  @mouseleave="item.selectedIndex = -1">
-                <div class="list-bg" :style="{backgroundImage: item.uiElement.image ? 'url(' + item.uiElement.image.imageUrl + ')'  : 'unset'}">
+                <div class="list-bg" :style="{backgroundImage: item.uiElement.image ? 'url(' + item.uiElement.image.imageUrl + '?param=250y250'  + ')'  : 'unset'}">
                   <div class="listen-times">
                     <a-icon type="customer-service" />
                     <span>{{item.resources && item.resources[0].resourceExtInfo.playCount | tenThousands(1)}}</span>
@@ -90,8 +90,27 @@
             </div>
           </div>
           <div class="rank-list-content">
-            <div class="rank-list-wrapper">
-              
+            <div class="rank-list-wrapper" v-for="(item, idx) in  rankList">
+              <div class="rank-list-l">
+                <div class="rank-list-l-wrapper">
+                  <div class="list-bg">
+                    <div class="listen-times">
+                      <a-icon type="customer-service" />
+                      <span>{{item.playCount | tenThousands(1)}}</span>
+                    </div>
+                    <div class="box-wrapper-mask" v-show="item.selectedIndex === idx">
+                      <a-icon type="play-circle" title="播放" theme="filled"/>
+                    </div>
+                  </div>
+                </div>
+                <div class="list-link">
+                  <span>{{item.name}}</span>
+                </div>
+              </div>
+              <div class="rank-list-r">
+                <div class="rank-list-header">{{item.name}}</div>
+                <div ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -101,6 +120,9 @@
 <script>
     import {mainPageService} from "./service/main-page.service";
     import {SYSTEM_EVENTS} from "../Const";
+    import {songInfoService} from "./service/song-info.service";
+    import {forkJoin} from "rxjs";
+
     export default {
       name: "selection-musics",
       data() {
@@ -108,7 +130,9 @@
           carouselInfo: [],
           currentCarouselIdx: 0,
           neteaseListInfo: [],
-          albumInfo: []
+          albumInfo: [],
+          forkJoin$: [],
+          rankList: []
         }
       },
       mounted() {
@@ -150,8 +174,19 @@
           });
           mainPageService.getAllRankList().subscribe(res => {
             if (res.code === 200) {
+              res.list.map(item => item.selectedIndex = -1);
               this.rankList = res.list.slice(0, 6);
               console.log(this.rankList);
+              this.forkJoin$ = [];
+              this.rankList.forEach(item => {
+                this.forkJoin$.push(songInfoService.getPlaylistDetail(item.id));
+              });
+              forkJoin(this.forkJoin$).pipe().subscribe(res => {
+                console.log(res, 'forkjoin');
+
+              }, error => {
+                console.log(error,  'forkjoin')
+              });
             }
           })
         }
@@ -300,18 +335,6 @@
                 color: $deepBlue;
               }
             }
-            .listen-times{
-              position: absolute;
-              bottom: 5%;
-              right: 5%;
-              padding: 1px 10px;
-              background-color: rgba(0,0,0,0.75);
-              border-radius: 20px;
-              color: white;
-              /deep/ .anticon{
-                color: white;
-              }
-            }
           }
           .list-bg-wrapper:hover {
             cursor: pointer;
@@ -334,6 +357,18 @@
             cursor: pointer;
           }
         }
+      }
+    }
+    .listen-times{
+      position: absolute;
+      bottom: 5%;
+      right: 5%;
+      padding: 1px 10px;
+      background-color: rgba(0,0,0,0.75);
+      border-radius: 20px;
+      color: white;
+      /deep/ .anticon{
+        color: white;
       }
     }
   }

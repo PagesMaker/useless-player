@@ -10,7 +10,7 @@ class SongInfoService {
   getSongDetail(id) {
     return HTTPClient.get(`/song/url?id=${id}`, {withTimeStamp: true});
   }
-  getUserPlaylistDetail(id) {
+  getPlaylistDetail(id) {
     return HTTPClient.get(`/playlist/detail?id=${id}`, {withTimeStamp: true});
   }
 

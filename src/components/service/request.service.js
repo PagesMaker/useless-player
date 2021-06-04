@@ -21,7 +21,7 @@ class HttpClientService {
     const symbol = url.includes('?') ? '&' : '?';
     let urlStr = UserInfos.cookie === '' || !config.withCredentials ? '' : `${symbol}cookie=${UserInfos.cookie}`;
     if (timeStamp) {
-      urlStr += urlStr.includes('?') ? '&timeStamp=' + timeStamp : '?timeStamp=' + timeStamp
+      urlStr += (url + urlStr).includes('?') ? '&timeStamp=' + timeStamp : '?timeStamp=' + timeStamp
     }
     return urlStr;
   }
@@ -35,7 +35,9 @@ class HttpClientService {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);
-    })
+    }).finally(() => {
+      subject.complete();
+    });
     return subject.asObservable();
   }
   post(url, body, config = {}) {
@@ -48,7 +50,9 @@ class HttpClientService {
       subject.next(config.observerBody ? res.data : res);
     }).catch(err => {
       subject.error(err);
-    })
+    }).finally(() => {
+      subject.complete();
+    });
     return subject.asObservable();
   }
 }

@@ -308,7 +308,7 @@
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
              this.getSongUrl();
           } else {
-            songInfoService.getUserPlaylistDetail(this.crtListInfo.id).subscribe(res => {
+            songInfoService.getPlaylistDetail(this.crtListInfo.id).subscribe(res => {
               if (res.code === 200) {
                 res.playlist.tracks.forEach(item => {
                   item.rowName = {
