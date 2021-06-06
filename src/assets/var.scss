@@ -7,6 +7,7 @@ $white: #F6F6F6;
 $black: #000000;
 $minHeight: 730px;
 $minWidth: 1080px;
+$deepGray: #797979;
 $grayBorder: 1px solid #EEEEEE;
 $songImageWidth: 430px;
 $z1e7: 1e7;
@@ -19,4 +20,10 @@ $shadow: 0 0 10px 0 rgb(10, 10, 10);
   flex-direction: $direction;
   justify-content: $justify;
   align-items: $align;
+}
+@mixin noWrap($oX: hidden, $oY: visible, $ws: nowrap, $to: ellipsis) {
+  overflow-y: $oY;
+  overflow-x: $oX;
+  white-space: $ws;
+  text-overflow: $to;
 }

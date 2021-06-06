@@ -37,13 +37,13 @@
           </div>
           <div class="list-netease-content">
             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
-              <div class="list-bg-wrapper"  @mouseenter="item.selectedIndex = index"  @mouseleave="item.selectedIndex = -1">
+              <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
                 <div class="list-bg" :style="{backgroundImage: item.uiElement.image ? 'url(' + item.uiElement.image.imageUrl + '?param=250y250'  + ')'  : 'unset'}">
                   <div class="listen-times">
                     <a-icon type="customer-service" />
                     <span>{{item.resources && item.resources[0].resourceExtInfo.playCount | tenThousands(1)}}</span>
                   </div>
-                  <div class="box-wrapper-mask" v-show="item.selectedIndex === index">
+                  <div class="box-wrapper-mask" v-show="selectedIndex.neteaseListInfo === index">
                     <a-icon type="play-circle" title="播放" theme="filled"/>
                   </div>
                 </div>
@@ -65,9 +65,9 @@
           </div>
           <div class="list-netease-content new-album">
               <div class="box-wrapper" v-for="(item, index) in albumInfo">
-                <div class="list-bg-wrapper"  @mouseenter="item.selectedIndex = index"  @mouseleave="item.selectedIndex = -1">
-                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + ')'  : 'unset'}">
-                    <div class="box-wrapper-mask" v-show="item.selectedIndex === index">
+                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
+                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
+                    <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
                       <a-icon type="play-circle" title="播放" theme="filled"/>
                     </div>
                   </div>
@@ -89,27 +89,29 @@
               <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
             </div>
           </div>
-          <div class="rank-list-content">
-            <div class="rank-list-wrapper" v-for="(item, idx) in  rankList">
+          <div class="rank-list-content list-netease-content">
+            <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList">
               <div class="rank-list-l">
                 <div class="rank-list-l-wrapper">
-                  <div class="list-bg">
+                  <div class="list-bg" :style="{backgroundImage: item.coverImgUrl ? 'url(' + item.coverImgUrl + '?param=250y250' + ')'  : 'unset'}">
                     <div class="listen-times">
                       <a-icon type="customer-service" />
                       <span>{{item.playCount | tenThousands(1)}}</span>
                     </div>
-                    <div class="box-wrapper-mask" v-show="item.selectedIndex === idx">
+                    <div class="box-wrapper-mask" v-show="selectedIndex.ranklist === index">
                       <a-icon type="play-circle" title="播放" theme="filled"/>
                     </div>
                   </div>
                 </div>
-                <div class="list-link">
-                  <span>{{item.name}}</span>
-                </div>
               </div>
               <div class="rank-list-r">
-                <div class="rank-list-header">{{item.name}}</div>
-                <div ></div>
+                <div class="rank-list-header"><span>{{item.name}}</span></div>
+                <div class="rank-list-row">
+                  <div class="rank-list-r-item" v-for="(tracks, idx) in item.playlist || []">
+                    <span>{{idx + 1 + '.'}}</span><span>{{tracks.name}}</span><span>&nbsp;-&nbsp;</span>
+                    <div v-for="(ar, i) in tracks.ar"><span>{{ar.name}}</span><span v-if="i !== tracks.ar.length - 1">/</span></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -127,6 +129,11 @@
       name: "selection-musics",
       data() {
         return {
+          selectedIndex: {
+            neteaseListInfo: -1,
+            albumInfo: -1,
+            ranklist: -1
+          },
           carouselInfo: [],
           currentCarouselIdx: 0,
           neteaseListInfo: [],
@@ -162,7 +169,11 @@
                 list.creatives.map(item => item.selectedIndex = -1);
                 this.neteaseListInfo = [...list.creatives.filter(item => item.uiElement)];
               }
+            } else {
+              this.$message.error('加载首页失败');
             }
+          }, error => {
+            this.$message.error('加载首页失败');
           });
           mainPageService.getNewAlbum().subscribe(res => {
             if (res.code === 200) {
@@ -170,7 +181,11 @@
               res.albums.map(item => item.selectedIndex = -1);
               this.albumInfo = [...res.albums];
               console.log(this.albumInfo)
+            } else {
+              this.$message.error('加载最新专辑数据失败');
             }
+          }, error => {
+            this.$message.error('加载最新专辑数据失败');
           });
           mainPageService.getAllRankList().subscribe(res => {
             if (res.code === 200) {
@@ -182,10 +197,17 @@
                 this.forkJoin$.push(songInfoService.getPlaylistDetail(item.id));
               });
               forkJoin(this.forkJoin$).pipe().subscribe(res => {
+                // forkjoin的response 不会打乱 请求的顺序
                 console.log(res, 'forkjoin');
-
+                res.forEach((item, index) => {
+                  if (item.code === 200) {
+                    this.rankList[index] = {...this.rankList[index],  playlist: item.playlist.tracks.slice(0, 5)};
+                  } else {
+                    this.$message.error('加载排行榜数据失败');
+                  }
+                });
               }, error => {
-                console.log(error,  'forkjoin')
+                this.$message.error('加载排行榜数据失败');
               });
             }
           })
@@ -312,13 +334,13 @@
             position: relative;
             width: 1.2rem;
             height: 1.2rem;
-            border-radius: 5%;
+            border-radius: 20px;
             .box-wrapper-mask{
               position: absolute;
               top: 0;
               left: 0;
-              opacity: 0.4;
-              border-radius: 5%;
+              opacity: 0;
+              border-radius: 20px;
               @include flex(column, center, center);
               width: $max;
               height: $max;
@@ -358,6 +380,77 @@
           }
         }
       }
+      .rank-list-content:hover{
+        cursor: pointer;
+      }
+      .rank-list-content{
+        margin-top: 0px;
+        width: $max;
+        height: auto;
+        color: black;
+        @include flex(row, flex-start, flex-start);
+        flex-wrap: wrap;
+        .box-wrapper{
+          margin-right: 5%;
+        }
+        .box-wrapper:nth-child(3n){
+          margin-right:0
+        }
+        .rank-list-wrapper {
+          background-color: #EFEFEF;
+          margin-top: 20px;
+          @include flex(row, flex-start, center);
+          width: 30%;
+          border-radius: 20px;
+          .rank-list-l{
+            .rank-list-l-wrapper:hover{
+              cursor: pointer;
+            }
+            .rank-list-l-wrapper{
+              width: 1.2rem;
+              height: 1.2rem;
+            }
+          }
+          .rank-list-r{
+            padding: 0.1rem;
+            width: calc(100% - 1.2rem);
+            height: 1.2rem;
+            @include flex(column, flex-start, flex-start);
+            .rank-list-header{
+              width: fit-content;
+              font-size: 1.5em;
+              height: auto;
+              @include flex(row, flex-start, center);
+              min-height: 30px;
+              color: black;
+              font-weight: 500;
+              span{
+                @include noWrap(hidden, visible, nowrap, ellipsis);
+              }
+            }
+            .rank-list-row{
+              @include flex(column, space-between, flex-start);
+              height: calc(100% - 1.5em);
+              padding: 0.05rem 0;
+              width: $max;
+              .rank-list-r-item{
+                font-size: 1em;
+                width: $max;
+                color: $deepGray;
+                font-weight: 400;
+                @include noWrap(hidden, hidden, nowrap, ellipsis);
+                @include flex(row, flex-start, center);
+              }
+            }
+          }
+        }
+        .rank-list-wrapper:hover{
+          -webkit-animation: moveInRankList 0.25s linear normal;
+          -moz-animation: moveInRankList 0.25s linear normal;
+          animation: moveInRankList 0.25s linear normal;
+          animation-fill-mode: forwards;
+        }
+      }
     }
     .listen-times{
       position: absolute;
@@ -374,7 +467,7 @@
   }
   @keyframes showMask{
     0%  {
-      opacity: 0.4;
+      opacity: 0;
     }
     100% {
       opacity: 1;
@@ -388,6 +481,14 @@
       margin-top: -20px;
       padding-bottom: 20px;
       height: calc(1.2rem + 20px);
+    }
+  }
+  @keyframes moveInRankList{
+    0%  {
+      margin-top: 20px;
+    }
+    100% {
+      margin-top: 5px;
     }
   }
 </style>
