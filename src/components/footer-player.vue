@@ -134,7 +134,7 @@
             picUrl: ''
           },
           name: 'music',
-          ar: [{}],
+          ar: [],
           dt: 0
         },
         songList: []

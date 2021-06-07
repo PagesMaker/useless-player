@@ -5,17 +5,22 @@
         <a-tabs default-active-key="0" @change="tabChanged($event)">
           <a-tab-pane v-for="(item, index) in tabs" :key="index + ''" :tab="item">
             <selection-musics v-if="item === '精选'"
+                              :isCurrent="index === selectedIndex"
             ></selection-musics>
-            <rank-list v-else-if="item === '排行榜'"
+           <!-- <rank-list v-else-if="item === '排行榜'"
+                       :isCurrent="index === selectedIndex"
             ></rank-list>
             <song-collections v-else-if="item === '歌单'"
                               :type="'songList'"
+                              :isCurrent="index === selectedIndex"
             ></song-collections>
             <musician-list v-else-if="item === '歌手'"
+                           :isCurrent="index === selectedIndex"
             ></musician-list>
             <song-collections v-else-if="item === '新碟上新'"
+                              :isCurrent="index === selectedIndex"
                               :type="'album'"
-            ></song-collections>
+            ></song-collections>-->
           </a-tab-pane>
         </a-tabs>
       </div>
@@ -39,13 +44,15 @@
       data() {
           return {
             tabs: mainPageService.mainPageTabItem,
+            selectedIndex: 0
           }
       },
       mounted() {
       },
       methods: {
         tabChanged(e) {
-
+          console.log(e);
+          this.selectedIndex = e;
         }
       },
     }

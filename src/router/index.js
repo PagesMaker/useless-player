@@ -13,6 +13,14 @@ Vue.use(Router)
 
 export default new Router({
 	routes: [
+    {
+      path: '*',
+      redirect: '/list-view'
+    },
+    {
+      path: '/',
+      redirect: '/list-view'
+    },
 		{
 			path: '',
 			name: 'app',
@@ -24,7 +32,7 @@ export default new Router({
 					component: mainContent,
           children: [
             {
-              path: '/',
+              path: '/list-view',
               name: 'list-view',
               component: listComponent,
               meta: { keepAlive:true }
@@ -32,12 +40,12 @@ export default new Router({
             {
               path: '/main-page',
               name: 'main-page',
-              component: mainPageComponent
+              component: mainPageComponent,
+              meta: { keepAlive:true }
             }
           ]
 				}
 			]
-		},
-    { path: '*', redirect: '/' }
+		}
 	]
 })

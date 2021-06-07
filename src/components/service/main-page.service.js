@@ -1,9 +1,9 @@
 import {HTTPClient} from "./request.service";
 
 class MainPageService {
-  mainPageTabItem = ['精选', '排行榜', '歌单', '歌手', '新碟上新'];
-  getHomeMainPage() {
-    return HTTPClient.get(`/homepage/block/page`, {withTimeStamp: true});
+  mainPageTabItem = ['精选'/*, '排行榜', '歌单', '歌手', '新碟上新'*/];
+  getHomeMainPagePic(type = 0) {
+    return HTTPClient.get(`/banner?type=${type}`, {withTimeStamp: true});
   }
 
   getNewAlbum() {
@@ -12,6 +12,9 @@ class MainPageService {
 
   getAllRankList() {
     return HTTPClient.get(`/toplist`, {withTimeStamp: true});
+  }
+  getPersonalization(offset = 6) {
+    return HTTPClient.get(`/personalized?limit=${offset}`, {withTimeStamp: true});
   }
 }
 export const mainPageService = new MainPageService();

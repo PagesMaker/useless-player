@@ -262,7 +262,7 @@
           console.log(res);
           if (res.code === 200) {
             this.songLists = res.playlist;
-            if (type !== SYSTEM_EVENTS.SONG_LIST_REFRESH) {
+            if (type !== SYSTEM_EVENTS.SONG_LIST_REFRESH && location.href.includes('list-view')) {
               this.selectedKeys = [this.startKeyIdx];
             }
             bully.setMessage({

@@ -1,127 +1,129 @@
 <template>
-      <div class="selection-music-content">
-        <div class="carousel">
-          <a-carousel :before-change="onCarouselChange" arrows :autoplay="true" :autoplaySpeed="5000">
-            <div
-              slot="prevArrow"
-              slot-scope="props"
-              class="custom-slick-arrow"
-              style="left: 10px"
-            >
-              <a-icon type="left-circle" />
-            </div>
-            <div
-              slot="nextArrow"
-              slot-scope="props"
-              class="custom-slick-arrow"
-              style="right: 10px"
-            >
-              <a-icon type="right-circle" />
-            </div>
-            <div class="carousel-pics" v-for="(item, index) in carouselInfo" @click="redirectPage(item)">
-              <div class="carousel-pics-bg" v-show="index === currentCarouselIdx" :style="{backgroundImage: item.pic ? 'url(' + item.pic + '?param=250y250' + ')' : 'unset'}"></div>
-              <div class="carousel-pics-content">
-                <img :src="item.pic" alt="">
-              </div>
-            </div>
-          </a-carousel>
-        </div>
-        <div class="list-netease">
-          <div class="list-netease-header">
-            <div class="header-left">
-              <span class="list-name">官方歌单</span><span class="list-name-desc">官方甄选订阅歌单</span>
-            </div>
-            <div class="header-right">
-              <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
-            </div>
-          </div>
-          <div class="list-netease-content">
-            <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
-              <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
-                <div class="list-bg" :style="{backgroundImage: item.uiElement.image ? 'url(' + item.uiElement.image.imageUrl + '?param=250y250'  + ')'  : 'unset'}">
-                  <div class="listen-times">
-                    <a-icon type="customer-service" />
-                    <span>{{item.resources && item.resources[0].resourceExtInfo.playCount | tenThousands(1)}}</span>
-                  </div>
-                  <div class="box-wrapper-mask" v-show="selectedIndex.neteaseListInfo === index">
-                    <a-icon type="play-circle" title="播放" theme="filled"/>
-                  </div>
-                </div>
-              </div>
-              <div class="list-link">
-                <span>{{item.uiElement.mainTitle && item.uiElement.mainTitle.title}}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="list-netease">
-          <div class="list-netease-header">
-            <div class="header-left">
-              <span class="list-name">新碟上架</span><span class="list-name-desc">获取最新专辑</span>
-            </div>
-            <div class="header-right">
-              <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
-            </div>
-          </div>
-          <div class="list-netease-content new-album">
-              <div class="box-wrapper" v-for="(item, index) in albumInfo">
-                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
-                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
-                    <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
-                      <a-icon type="play-circle" title="播放" theme="filled"/>
-                    </div>
-                  </div>
-                </div>
-                <div class="list-link">
-                  <span>{{item.name}}</span>
-                  <br/>
-                  <span>{{item.artist.name}}</span>
-                </div>
-              </div>
-          </div>
-        </div>
-        <div class="list-netease rank-list">
-          <div class="list-netease-header">
-            <div class="header-left">
-              <span class="list-name">排行榜</span><span class="list-name-desc">获取最热歌曲</span>
-            </div>
-            <div class="header-right">
-              <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
-            </div>
-          </div>
-          <div class="rank-list-content list-netease-content">
-            <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList">
-              <div class="rank-list-l">
-                <div class="rank-list-l-wrapper">
-                  <div class="list-bg" :style="{backgroundImage: item.coverImgUrl ? 'url(' + item.coverImgUrl + '?param=250y250' + ')'  : 'unset'}">
-                    <div class="listen-times">
-                      <a-icon type="customer-service" />
-                      <span>{{item.playCount | tenThousands(1)}}</span>
-                    </div>
-                    <div class="box-wrapper-mask" v-show="selectedIndex.ranklist === index">
-                      <a-icon type="play-circle" title="播放" theme="filled"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="rank-list-r">
-                <div class="rank-list-header"><span>{{item.name}}</span></div>
-                <div class="rank-list-row">
-                  <div class="rank-list-r-item" v-for="(tracks, idx) in item.playlist || []">
-                    <span>{{idx + 1 + '.'}}</span><span>{{tracks.name}}</span><span>&nbsp;-&nbsp;</span>
-                    <div v-for="(ar, i) in tracks.ar"><span>{{ar.name}}</span><span v-if="i !== tracks.ar.length - 1">/</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+     <a-spin :spinning="loading">
+       <div class="selection-music-content">
+         <div class="carousel" v-if="carouselInfo.length">
+           <a-carousel ref="carousel" :before-change="onCarouselChange" arrows :autoplay="true" :autoplaySpeed="5000">
+             <div
+               slot="prevArrow"
+               slot-scope="props"
+               class="custom-slick-arrow"
+               style="left: 10px"
+             >
+               <a-icon type="left-circle" />
+             </div>
+             <div
+               slot="nextArrow"
+               slot-scope="props"
+               class="custom-slick-arrow"
+               style="right: 10px"
+             >
+               <a-icon type="right-circle" />
+             </div>
+             <div class="carousel-pics" v-for="(item, index) in carouselInfo" @click="carouselClicked(item)">
+               <div class="carousel-pics-bg" v-show="index === currentCarouselIdx" :style="{backgroundImage: item.imageUrl ? 'url(' + item.imageUrl + '?param=250y250' + ')' : 'unset'}"></div>
+               <div class="carousel-pics-content">
+                 <img :src="item.imageUrl" alt="">
+               </div>
+             </div>
+           </a-carousel>
+         </div>
+         <div class="list-netease">
+           <div class="list-netease-header">
+             <div class="header-left">
+               <span class="list-name">官方歌单</span><span class="list-name-desc">官方甄选订阅歌单</span>
+             </div>
+             <div class="header-right">
+               <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
+             </div>
+           </div>
+           <div class="list-netease-content">
+             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
+               <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
+                 <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250'  + ')'  : 'unset'}">
+                   <div class="listen-times">
+                     <a-icon type="customer-service" />
+                     <span>{{item.playCount | tenThousands(1)}}</span>
+                   </div>
+                   <div class="box-wrapper-mask" v-show="selectedIndex.neteaseListInfo === index">
+                     <a-icon type="play-circle" title="播放" theme="filled"/>
+                   </div>
+                 </div>
+               </div>
+               <div class="list-link">
+                 <span>{{item.name}}</span>
+               </div>
+             </div>
+           </div>
+         </div>
+         <div class="list-netease">
+           <div class="list-netease-header">
+             <div class="header-left">
+               <span class="list-name">新碟上架</span><span class="list-name-desc">获取最新专辑</span>
+             </div>
+             <div class="header-right">
+               <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
+             </div>
+           </div>
+           <div class="list-netease-content new-album">
+             <div class="box-wrapper" v-for="(item, index) in albumInfo">
+               <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
+                 <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
+                   <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
+                     <a-icon type="play-circle" title="播放" theme="filled"/>
+                   </div>
+                 </div>
+               </div>
+               <div class="list-link">
+                 <span>{{item.name}}</span>
+                 <br/>
+                 <span>{{item.artist.name}}</span>
+               </div>
+             </div>
+           </div>
+         </div>
+         <div class="list-netease rank-list">
+           <div class="list-netease-header">
+             <div class="header-left">
+               <span class="list-name">排行榜</span><span class="list-name-desc">获取最热歌曲</span>
+             </div>
+             <div class="header-right">
+               <span class="list-more">更多&nbsp;<a-icon type="right"/></span>
+             </div>
+           </div>
+           <div class="rank-list-content list-netease-content">
+             <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList">
+               <div class="rank-list-l">
+                 <div class="rank-list-l-wrapper">
+                   <div class="list-bg" :style="{backgroundImage: item.coverImgUrl ? 'url(' + item.coverImgUrl + '?param=250y250' + ')'  : 'unset'}">
+                     <div class="listen-times">
+                       <a-icon type="customer-service" />
+                       <span>{{item.playCount | tenThousands(1)}}</span>
+                     </div>
+                     <div class="box-wrapper-mask" v-show="selectedIndex.ranklist === index">
+                       <a-icon type="play-circle" title="播放" theme="filled"/>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+               <div class="rank-list-r">
+                 <div class="rank-list-header"><span>{{item.name}}</span></div>
+                 <div class="rank-list-row">
+                   <div class="rank-list-r-item" v-for="(tracks, idx) in item.playlist || []">
+                     <span>{{idx + 1 + '.'}}</span><span>{{tracks.name}}</span><span>&nbsp;-&nbsp;</span>
+                     <div v-for="(ar, i) in tracks.ar"><span>{{ar.name}}</span><span v-if="i !== tracks.ar.length - 1">/</span></div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </a-spin>
 </template>
 
 <script>
     import {mainPageService} from "./service/main-page.service";
-    import {SYSTEM_EVENTS} from "../Const";
+    import {searchService} from "./service/search.service";
     import {songInfoService} from "./service/song-info.service";
     import {forkJoin} from "rxjs";
 
@@ -135,45 +137,87 @@
             ranklist: -1
           },
           carouselInfo: [],
+          loading: true,
           currentCarouselIdx: 0,
           neteaseListInfo: [],
           albumInfo: [],
+          defaultOffset: 6,
           forkJoin$: [],
           rankList: []
         }
       },
       mounted() {
         this.getHomeInfo();
+        setTimeout(() => {
+          this.loading = false;
+          this.$refs.carousel.next();
+        }, 1500);
       },
       methods: {
         onCarouselChange(from, to) {
           this.currentCarouselIdx = to;
         },
-        redirectPage(e) {
+        carouselClicked(e) {
+          for (const key in searchService.searchEnum) {
+            if (searchService.searchEnum.hasOwnProperty(key)) {
+              if (searchService.searchEnum[key] === e.targetType) {
+                this[key + 'Handle'].apply(this, e);
+                return;
+              }
+            }
+          }
+        },
+        songsHandle (e) {
+
+        },
+        artistsHandle (e) {
+
+        },
+        playlistsHandle (e) {
+
+        },
+        albumsHandle (e) {
+
+        },
+        userHandle (e) {
+
+        },
+        mvHandle (e) {
+
+        },
+        lyricsHandle (e) {
+
+        },
+        radioHandle (e) {
+
+        },
+        videoHandle (e) {
+
+        },
+        comprehensiveHandle (e) {
 
         },
         getHomeInfo() {
-          mainPageService.getHomeMainPage().subscribe(res => {
+          mainPageService.getHomeMainPagePic(0).subscribe(res => {
             console.log(res);
             if (res.code === 200) {
-              const banner = res.data.blocks.find(item => item.blockCode === SYSTEM_EVENTS.HOMEPAGE_BANNER);
-              if (banner) {
-                banner.extInfo.banners = banner.extInfo.banners.filter(item => !item.adid);
-                this.carouselInfo = [...banner.extInfo.banners];
-              }
-              const list = res.data.blocks.find(item => item.blockCode === SYSTEM_EVENTS.HOMEPAGE_BLOCK_PLAYLIST_RCMD);
-              if (list) {
-                if ( list.creatives.length > 6 ) {
-                  list.creatives.length = 6;
-                }
-                list.creatives.map(item => item.selectedIndex = -1);
-                this.neteaseListInfo = [...list.creatives.filter(item => item.uiElement)];
-              }
+              console.log(res);
+              this.carouselInfo = [...res.banners.filter(item => !item.adid)];
             } else {
-              this.$message.error('加载首页失败');
+              this.$message.error('加载首页轮播图失败');
             }
-          }, error => {
-            this.$message.error('加载首页失败');
+          }, () => {
+            this.$message.error('加载首页轮播图失败');
+          });
+          mainPageService.getPersonalization(this.defaultOffset).subscribe(res => {
+            if (res.code === 200) {
+              console.log(res);
+              this.neteaseListInfo = [...res.result];
+            } else {
+              this.$message.error('加载推荐歌单失败');
+            }
+          }, () => {
+            this.$message.error('加载推荐歌单失败');
           });
           mainPageService.getNewAlbum().subscribe(res => {
             if (res.code === 200) {
@@ -184,7 +228,7 @@
             } else {
               this.$message.error('加载最新专辑数据失败');
             }
-          }, error => {
+          }, () => {
             this.$message.error('加载最新专辑数据失败');
           });
           mainPageService.getAllRankList().subscribe(res => {
@@ -206,11 +250,25 @@
                     this.$message.error('加载排行榜数据失败');
                   }
                 });
-              }, error => {
+              }, () => {
                 this.$message.error('加载排行榜数据失败');
               });
             }
-          })
+          });
+        }
+      },
+      props: ['isCurrent'],
+      watch: {
+        isCurrent: {
+          handler(val) {
+            if (val === true) {
+              /*setTimeout(() => {
+                this.loading = false;
+                this.$refs.carousel.next();
+              }, 1500);
+              this.getHomeInfo();*/
+            }
+          }
         }
       }
     }
