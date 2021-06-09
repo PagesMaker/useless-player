@@ -7,7 +7,9 @@ class HttpClientService {
   defaultConfig = {
     responseType: "json",
     timeout: 5000,
-    headers: {"X-Requested-With": "XMLHttpRequest"},
+    headers: {
+      "X-Requested-With": "XMLHttpRequest"
+    },
     withCredentials: true,
     observerBody: true,
     baseURL: SERVER

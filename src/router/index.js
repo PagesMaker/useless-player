@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import mainContent from '@/components/main-content'
+// import mainContent from '@/components/main-content'
 import App from '@/App'
-import listComponent from '@/components/list-component'
-import mainPageComponent from '@/components/main-page'
+// import listComponent from '@/components/list-component'
+// import mainPageComponent from '@/components/main-page'
+import {SERVER} from '../components/service/app.service';
 const originalPush = Router.prototype.push
 
 Router.prototype.push = function push(location) {
@@ -12,6 +13,7 @@ Router.prototype.push = function push(location) {
 Vue.use(Router)
 
 export default new Router({
+  mode: SERVER ? '' : 'history',
 	routes: [
     {
       path: '*',
@@ -29,18 +31,18 @@ export default new Router({
 				{
 					path: '',
 					name: 'main-content',
-					component: mainContent,
+					component: resolve =>  require(['../components/main-content'], resolve),
           children: [
             {
               path: '/list-view',
               name: 'list-view',
-              component: listComponent,
+              component: resolve => require(['../components/list-component'], resolve),
               meta: { keepAlive:true }
             },
             {
               path: '/main-page',
               name: 'main-page',
-              component: mainPageComponent,
+              component: resolve => require(['../components/main-page'], resolve),
               meta: { keepAlive:true }
             }
           ]

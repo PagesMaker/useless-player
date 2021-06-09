@@ -3,8 +3,8 @@
     <div class="header-content-box">
       <div class="header-left-wrapper">
         <div class="navigate-box">
-          <a-icon type="left" @click="navigateTo('back')"/>
-          <a-icon type="right" @click="navigateTo('forward')" />
+<!--          <a-icon type="left" @click="navigateTo('back')"/>-->
+<!--          <a-icon type="right" @click="navigateTo('forward')" />-->
         </div>
         <div class="search-music-input-box">
           <a-input class="search-music-input" ref="userNameInput" @click="showSearchListing(true)" @keypress.enter="searchKeywords(searchMusic)" @blur="showSearchListing(false)" v-model="searchMusic" placeholder="搜索音乐">
@@ -81,7 +81,7 @@
 </template>
 
 <script>
-  import {UserInfos} from './service/user-info.service';
+  import {md5, UserInfos} from './service/user-info.service';
   import {bully} from "./service/bully";
   import {SYSTEM_EVENTS} from "../Const";
   import {fromEvent, interval, Subject} from "rxjs";
@@ -116,8 +116,9 @@
     },
     mounted() {
       setTimeout(() => {
-        if (document.cookie.includes('__csrf')) {
-          UserInfos.cookie = document.cookie;
+        const cookie = localStorage.getItem('cookie');
+        if (cookie && cookie.includes('__csrf')) {
+          UserInfos.cookie = cookie;
           UserInfos.isLogin = true;
           this.getLoginStatus();
         }
@@ -288,6 +289,7 @@
               if (res && res.code === 800) {
                 this.getQR();
                 clearInterval(this.intervalOfGetQR);
+                this.intervalOfGetQR = null;
               } else if (res && res.code === 801) {
                 // 等待扫码
               } else if (res && res.code === 802) {
@@ -300,18 +302,18 @@
         }, 1000);
       },
       loginSuccess(res) {
+        if (this.intervalOfGetQR) {
+          clearInterval(this.intervalOfGetQR);
+          this.intervalOfGetQR = null;
+        }
         UserInfos.isLogin = true;
-        // localStorage.setItem('cookie', res.cookie);
-        res.cookie.split(';;').forEach(item => {
+        localStorage.setItem('cookie', res.cookie);
+       /* const cookie = res.cookie.replace('HTTPOnly', '');
+        cookie.split(';;').forEach(item => {
           console.log(item);
-          document.cookie = item.split('HTTPOnly')[0];
-          if (item.split('HTTPOnly')[1]) {
-            document.cookie = item.split('HTTPOnly')[1][0] === ';' ?
-              item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1)[0] === ';' ? item.split('HTTPOnly')[1].slice(2, item.split('HTTPOnly')[1].length - 1) : item.split('HTTPOnly')[1].slice(1, item.split('HTTPOnly')[1].length - 1) :
-              item.split('HTTPOnly')[1];
-          }
-        });
-        UserInfos.cookie = document.cookie;
+          document.cookie = item;
+        });*/
+        UserInfos.cookie = res.cookie;
         // 需要将cookie保存并且设置到浏览器
         this.getLoginStatus();
         this.handleCancel();
@@ -358,16 +360,16 @@
         this.loginProcess = e;
         if (this.loginProcess === 'loginByQR') {
           this.getQR();
-        } else if (this.loginProcess === 'loginByPassword') {
-          clearInterval(this.intervalOfGetQR);
-        } else {
-          clearInterval(this.intervalOfGetQR);
+          return;
         }
+        clearInterval(this.intervalOfGetQR);
+        this.intervalOfGetQR = null;
       },
       loginByPassword() {
         if (this.phone.phone && this.phone.password) {
           UserInfos.loginByPassword({
-            ...this.phone,
+            phone: this.phone.phone,
+            md5_password: md5(this.phone.password),
             countrycode: this.selectedCountryCode
           }).subscribe(res => {
             if (res.code === 200) {

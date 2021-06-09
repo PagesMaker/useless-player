@@ -236,7 +236,8 @@
         });
       },
       getMusic(musicId) {
-        return `https://music.163.com/song/media/outer/url?id=${musicId}.mp3`
+        console.log('plan b', musicId)
+        return `https://music.163.com/song/media/outer/url?id=${musicId.id}.${musicId.type ? musicId.type.toLowerCase() : 'mp3'}`
       },
       changeProcess(e) {
         this.changeProcess$.next(e);
@@ -250,10 +251,10 @@
         try {
           this.player.play();
         } catch (e) {
-          this.songInfo.url = this.getMusic(this.songInfo.id);
-          setTimeout(() => {
+          this.songInfo = { ...this.songInfo, url: this.getMusic(this.songInfo)};
+          this.$nextTick(() => {
             this.player.play();
-          })
+          });
         }
       },
       pause() {
@@ -323,9 +324,18 @@
               this.$nextTick(() => {
                 if (this.player.paused) {
                   // 暂停
-                  if (this.songInfo.fee === 1) {
+                  /*if (this.songInfo.fee === 1 && this.songInfo.freeTrialInfo) {
+                    this.$message.warning('该歌曲为收费曲目，只能试听15秒');
+                    this.startTime = this.songInfo.freeTrialInfo ? this.songInfo.freeTrialInfo.start : 0;
+                  } else {
+                    this.startTime = 0
+                  }*/
+                  if (this.songInfo.fee === 1 && this.songInfo.freeTrialInfo && UserInfos.userInfo.vipType === 0) {
                     this.$message.warning('该歌曲为收费曲目，只能试听15秒');
                     this.startTime = this.songInfo.freeTrialInfo.start;
+                  } else if (this.songInfo.fee === 1 && !this.songInfo.freeTrialInfo && UserInfos.userInfo.vipType === 0) {
+                    this.$message.warning('该歌曲为收费曲目');
+                    return;
                   } else {
                     this.startTime = 0
                   }

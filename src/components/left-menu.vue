@@ -16,19 +16,39 @@
               <a-icon type="customer-service" />音乐馆
           </a-menu-item>
           <a-menu-item :key="2">
+            <a-tooltip placement="topLeft">
+              <template slot="title">
+                <span>暂未实现</span>
+              </template>
               <a-icon type="video-camera" />视频
+            </a-tooltip>
           </a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub2" @titleClick="titleClick">
         <span slot="title"><span>我的音乐</span></span>
         <a-menu-item :key="3">
-          <a-icon type="star" />我喜欢
+          <a-tooltip placement="topLeft">
+            <template slot="title">
+              <span>暂未实现</span>
+            </template>
+            <a-icon type="star" />我喜欢
+          </a-tooltip>
         </a-menu-item>
         <a-menu-item :key="4">
-          <a-icon type="history" />播放历史
+          <a-tooltip placement="topLeft">
+            <template slot="title">
+              <span>暂未实现</span>
+            </template>
+            <a-icon type="history" />播放历史
+          </a-tooltip>
         </a-menu-item>
         <a-menu-item :key="5">
-          <a-icon type="menu" />试听列表
+          <a-tooltip placement="topLeft">
+            <template slot="title">
+              <span>暂未实现</span>
+            </template>
+            <a-icon type="menu" />试听列表
+          </a-tooltip>
         </a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub3">
