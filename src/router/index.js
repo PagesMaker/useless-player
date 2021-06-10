@@ -13,15 +13,15 @@ Router.prototype.push = function push(location) {
 Vue.use(Router)
 
 export default new Router({
-  mode: SERVER ? '' : 'history',
+  // mode: SERVER ? 'hash' : 'history',
 	routes: [
     {
       path: '*',
-      redirect: '/list-view'
+      redirect: {name: 'main-page'}
     },
     {
       path: '/',
-      redirect: '/list-view'
+      redirect: {name: 'main-page'}
     },
 		{
 			path: '',

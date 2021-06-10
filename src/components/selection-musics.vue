@@ -118,6 +118,7 @@
            </div>
          </div>
        </div>
+       <page-footer></page-footer>
      </a-spin>
 </template>
 
@@ -126,9 +127,11 @@
     import {searchService} from "./service/search.service";
     import {songInfoService} from "./service/song-info.service";
     import {forkJoin} from "rxjs";
+    import pageFooter from './page-footer';
 
     export default {
       name: "selection-musics",
+      components: {pageFooter},
       data() {
         return {
           selectedIndex: {
