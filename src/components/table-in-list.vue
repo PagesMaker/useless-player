@@ -15,6 +15,7 @@
                 @handleDownload="handleDownload(index)"
                 @handleRemove="handleRemove(index)"
                 @handleComment="handleComment(index)"
+                @handlePlay="handlePlay(index)"
                 @addToList="addToList($event, index)"
                 @addToNewList="addToNewList(index)"
               ></icon-group>
@@ -53,6 +54,7 @@
                 @handleDownload="handleDownload(index)"
                 @handleRemove="handleRemove(index)"
                 @handleComment="handleComment(index)"
+                @handlePlay="handlePlay(index)"
                 @addToList="addToList($event, index)"
                 @addToNewList="addToNewList(index)"
               ></icon-group>
@@ -110,7 +112,7 @@
           this.$emit('handleTableChange', {pagination, filters, sorter});
         },
         initShowIcons() {
-          this.showIcon = ['comment', 'deleteFromList', 'download', 'shared', 'addToList'];
+          this.showIcon = ['play', 'comment', 'deleteFromList', 'download', 'shared', 'addToList'];
         },
         tabChanged(e) {},
         getTitle(data) {
@@ -170,6 +172,9 @@
         },
         handleComment(idx) {
           // todo
+        },
+        handlePlay(idx) {
+          this.$emit('changeCurrentSongIdx', this.songs[idx]);
         },
         addToList(e, index) {
           bully.setMessage({
