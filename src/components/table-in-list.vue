@@ -140,7 +140,7 @@
         },
         handleDownload(idx) {
           console.log(this.songs[idx]);
-          songInfoService.getSongDetail(this.songs[idx].id).subscribe(async res => {
+          songInfoService.getSongUrl(this.songs[idx].id).subscribe(async res => {
             if (res.code === 200) {
               for (const item of res.data) {
                 let response = await fetch(item.url);

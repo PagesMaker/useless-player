@@ -77,7 +77,8 @@
   import {Subject} from "rxjs";
   import {debounceTime} from "rxjs/operators";
   import {PY} from "../assets/ChinesePY";
-    export default {
+
+  export default {
       name: "list-component",
       components: {
         tableInList
@@ -240,7 +241,29 @@
             } else {
             }
           }
-
+          if (res.type === SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE) {
+            console.log(res.data);
+           if (res.data && res.data.targetId) {
+             if (res.data.type === 'albums') {
+               songInfoService.getAlbum(res.data.targetId).subscribe(response => {
+                 if (response.code === 200) {
+                   this.searchMode = true;
+                   this.currentSearchData = response.songs.map(item => (
+                     {...item, artists: item.ar, album: item.al, duration: item.dt, rowName: {
+                         name: item.name,
+                         hover: false
+                     }
+                     })
+                   );
+                 } else {
+                   this.$message.error('获取歌单详情失败')
+                 }
+               }, () => {
+                 this.$message.error('获取歌单详情失败')
+               });
+             }
+           }
+          }
         })
         this.subscription.push(sub, subR, s);
       },
@@ -291,7 +314,7 @@
               data.dt = data.duration;
               this.currentSongIdx = this.currentSearchData.findIndex(item => item.id === data.id);
               console.log(this.currentSongIdx);
-              songInfoService.getSongDetail(data.id).subscribe(res => {
+              songInfoService.getSongUrl(data.id).subscribe(res => {
                 console.log(res);
                 data = {...data, ...res.data[0]};
                 bully.setMessage({
@@ -355,7 +378,7 @@
           if (!this.songs.length) {
             return;
           }
-          songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {
+          songInfoService.getSongUrl(this.songs[this.currentSongIdx].id).subscribe(res => {
             this.playingListIdx = this.crtListInfoIdx;
             const data = {...this.songs[this.currentSongIdx], ...res.data[0], crtListId: this.crtListInfo.id};
             bully.setMessage({

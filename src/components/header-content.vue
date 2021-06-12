@@ -270,6 +270,7 @@
                       data: res.result
                     }
                   });
+                  this.$router.push({name : 'list-view'});
                 }
               }
             }

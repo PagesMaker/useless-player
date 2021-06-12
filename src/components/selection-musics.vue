@@ -128,6 +128,8 @@
     import {songInfoService} from "./service/song-info.service";
     import {forkJoin} from "rxjs";
     import pageFooter from './page-footer';
+    import {bully} from "./service/bully";
+    import {SYSTEM_EVENTS} from "../Const";
 
     export default {
       name: "selection-musics",
@@ -164,41 +166,75 @@
           for (const key in searchService.searchEnum) {
             if (searchService.searchEnum.hasOwnProperty(key)) {
               if (searchService.searchEnum[key] === e.targetType) {
-                this[key + 'Handle'].apply(this, e);
+                this[key + 'Handle'].call(this, e, key); // 调用不同的处理方式
                 return;
               }
             }
           }
         },
-        songsHandle (e) {
-
+        songsHandle (...args) {
+          console.log(...args);
+          this.playSong(...args);
         },
-        artistsHandle (e) {
-
+        artistsHandle (...args) {
+          this.goToList(...args);
         },
-        playlistsHandle (e) {
-
+        playlistsHandle (...args) {
+          this.goToList(...args);
         },
-        albumsHandle (e) {
-
+        albumsHandle (...args) {
+          this.goToList(...args);
         },
-        userHandle (e) {
-
+        userHandle (...args) {
+          this.goToList(...args);
         },
-        mvHandle (e) {
-
+        mvHandle (...args) {
+          this.goToList(...args);
         },
-        lyricsHandle (e) {
-
+        lyricsHandle (...args) {
+          // 可能根本不会进这个
         },
-        radioHandle (e) {
-
+        radioHandle (...args) {
+          // 没有设计电台的功能
         },
-        videoHandle (e) {
-
+        videoHandle (...args) {
+          // todo
         },
-        comprehensiveHandle (e) {
-
+        comprehensiveHandle (...args) {
+          // todo
+        },
+        goToList(res, key) {
+          bully.setRMessage({
+            type: SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE,
+            data: {
+              ...res,
+              type: key
+            }
+          });
+          this.$router.push({name : 'list-view'});
+        },
+        playSong(param) {
+          if (param.targetId) {
+            songInfoService.getSongDetail(param.targetId).subscribe(res => {
+              if (res.code === 200) {
+                songInfoService.getSongUrl(param.targetId).subscribe(r => {
+                  if (res.code === 200) {
+                    const data = {...res.songs[0], ...r.data[0]};
+                    bully.setMessage({
+                      type: SYSTEM_EVENTS.PLAY_MUSIC,
+                      data
+                    });
+                  } else {
+                    this.$message.error('获取歌曲详情失败')
+                  }
+                });
+              } else {
+                this.$message.error('获取歌曲详情失败')
+              }
+            }, () => {
+              this.$message.error('获取歌曲详情失败')
+            });
+          }
         },
         getHomeInfo() {
           mainPageService.getHomeMainPagePic(0).subscribe(res => {
