@@ -152,6 +152,9 @@
         if (res.type ===  SYSTEM_EVENTS.SEARCH_KEYWORDS) {
           this.selectedKeys = [0];
         }
+        if (res.type ===  SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE) {
+          this.selectedKeys = [0];
+        }
       })
       this.subscription.push(sub, rsub);
     },

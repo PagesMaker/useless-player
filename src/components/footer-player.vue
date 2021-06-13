@@ -5,19 +5,19 @@
     </div>
     <div class="song-area">
       <div class="song-info">
-        <div v-if="songInfo.al.picUrl !== '' && !musicDetailShow" @mouseenter="pictureHover = true" @mouseleave="pictureHover = false" @click="openMusicDetail()" class="song-image">
-          <img :src="songInfo.al.picUrl" alt="" :style="{filter: pictureHover ? 'brightness(0.7)' : 'unset'}">
+        <div v-if="(songInfo.al || songInfo.album).picUrl !== '' && !musicDetailShow" @mouseenter="pictureHover = true" @mouseleave="pictureHover = false" @click="openMusicDetail()" class="song-image">
+          <img :src="(songInfo.al || songInfo.album).picUrl" alt="" :style="{filter: pictureHover ? 'brightness(0.7)' : 'unset'}">
           <a-icon v-if="pictureHover" class="song-image-icon" type="double-left"/>
         </div>
-        <div class="song-image blue-bg" style="opacity: 0.7" v-else-if="songInfo.al.picUrl === '' && !musicDetailShow">
+        <div class="song-image blue-bg" style="opacity: 0.7" v-else-if="(songInfo.al || songInfo.album).picUrl === '' && !musicDetailShow">
           <a-icon type="customer-service"/>
         </div>
         <div class="song-name-area">
           <div class="song-name-content" v-if="!musicDetailShow">
             <span class="song-name">{{songInfo.name}}</span>
-            <span v-if="songInfo.ar.length">&nbsp;-&nbsp;</span>
-            <span v-for="(auth, index) in songInfo.ar" @click="jumpToAuthorPage(auth)">
-               <span>{{auth.name}}</span><span v-if="index !== songInfo.ar.length - 1">&nbsp;/&nbsp;</span>
+            <span v-if="(songInfo.ar || songInfo.artists).length">&nbsp;-&nbsp;</span>
+            <span v-for="(auth, index) in (songInfo.ar || songInfo.artists)" @click="jumpToAuthorPage(auth)">
+               <span>{{auth.name}}</span><span v-if="index !== (songInfo.ar || songInfo.artists).length - 1">&nbsp;/&nbsp;</span>
             </span>
           </div>
           <div class="function-area">
@@ -60,15 +60,25 @@
         <div class="mask" v-if="soundPanelVisible" @click="soundPanelVisible = false"></div>
       </div>
       <div class="right-control-area">
-        <div class="lyrics">
-          <i class="anticon">词</i>
-        </div>
+        <a-tooltip placement="topLeft">
+          <template slot="title">
+            <span>暂未实现</span>
+          </template>
+          <div class="lyrics">
+            <i class="anticon">词</i>
+          </div>
+        </a-tooltip>
         <div class="time-area">
           <span>{{ currentTime + startTime  | timeFormat('mm:ss')}}</span> <span>&nbsp;/&nbsp;</span> <span>{{getSongTime | timeFormat('mm:ss')}}</span>
         </div>
-        <div class="list-area">
-          <a-icon type="menu" title=""/>
-        </div>
+        <a-tooltip placement="topLeft">
+          <template slot="title">
+            <span>暂未实现</span>
+          </template>
+          <div class="list-area">
+            <a-icon type="menu" title=""/>
+          </div>
+        </a-tooltip>
       </div>
     </div>
     <audio :src="songInfo.url" ref="mainPlayer" preload="auto" @pause="isPaused = true" @play="isPaused = false"
@@ -133,9 +143,14 @@
           al: {
             picUrl: ''
           },
+          ablum: {
+            picUrl: ''
+          },
           name: 'music',
           ar: [],
-          dt: 0
+          artists: [],
+          dt: 0,
+          duration: 0
         },
         songList: []
       }
@@ -183,7 +198,7 @@
         }
       },
       handleDownload() {
-        songInfoService.getSongDetail(this.songInfo.id).subscribe(async res => {
+        songInfoService.getSongUrl(this.songInfo.id).subscribe(async res => {
           if (res.code === 200) {
             for (const item of res.data) {
               let response = await fetch(item.url);
@@ -278,7 +293,7 @@
     },
     computed: {
       getSongTime() {
-        return !this.songInfo.dt ? 0 : this.songInfo.dt / 1000
+        return !(this.songInfo.dt || this.songInfo.duration) ? 0 : (this.songInfo.dt || this.songInfo.duration) / 1000
       },
       process() {
         const process = ((this.currentTime + this.startTime) / this.getSongTime) * 100;

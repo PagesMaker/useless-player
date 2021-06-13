@@ -37,7 +37,7 @@
              </div>
            </div>
            <div class="list-netease-content">
-             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
+             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo" @click="playlistsHandle(item, 'playlists')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250'  + ')'  : 'unset'}">
                    <div class="listen-times">
@@ -65,7 +65,7 @@
              </div>
            </div>
            <div class="list-netease-content new-album">
-             <div class="box-wrapper" v-for="(item, index) in albumInfo">
+             <div class="box-wrapper" v-for="(item, index) in albumInfo"  @click="playlistsHandle(item, 'albums')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
                    <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
@@ -91,7 +91,7 @@
              </div>
            </div>
            <div class="rank-list-content list-netease-content">
-             <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList">
+             <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList" @click="playlistsHandle(item, 'ranklist')">
                <div class="rank-list-l">
                  <div class="rank-list-l-wrapper">
                    <div class="list-bg" :style="{backgroundImage: item.coverImgUrl ? 'url(' + item.coverImgUrl + '?param=250y250' + ')'  : 'unset'}">
@@ -128,6 +128,8 @@
     import {songInfoService} from "./service/song-info.service";
     import {forkJoin} from "rxjs";
     import pageFooter from './page-footer';
+    import {bully} from "./service/bully";
+    import {SYSTEM_EVENTS} from "../Const";
 
     export default {
       name: "selection-musics",
@@ -164,41 +166,80 @@
           for (const key in searchService.searchEnum) {
             if (searchService.searchEnum.hasOwnProperty(key)) {
               if (searchService.searchEnum[key] === e.targetType) {
-                this[key + 'Handle'].apply(this, e);
+                this[key + 'Handle'].call(this, e, key); // 调用不同的处理方式
                 return;
               }
             }
           }
         },
-        songsHandle (e) {
-
+        songsHandle (...args) {
+          console.log(...args);
+          this.playSong(...args);
         },
-        artistsHandle (e) {
-
+        artistsHandle (...args) {
+          this.goToList(...args);
         },
-        playlistsHandle (e) {
-
+        playlistsHandle (...args) {
+          this.goToList(...args);
         },
-        albumsHandle (e) {
-
+        albumsHandle (...args) {
+          this.goToList(...args);
         },
-        userHandle (e) {
-
+        userHandle (...args) {
+          this.goToList(...args);
         },
-        mvHandle (e) {
-
+        mvHandle (...args) {
+          this.goToList(...args);
         },
-        lyricsHandle (e) {
-
+        lyricsHandle (...args) {
+          // 可能根本不会进这个
         },
-        radioHandle (e) {
-
+        radioHandle (...args) {
+          // 没有设计电台的功能，有需求可以自己加
         },
-        videoHandle (e) {
-
+        videoHandle (...args) {
+          // todo
+          this.$message.warning('尚未实现');
         },
-        comprehensiveHandle (e) {
-
+        comprehensiveHandle (...args) {
+          // todo
+          this.$message.warning('尚未实现');
+        },
+        digitalHandle(...args) {
+          this.$message.warning('因为版权问题和本站非盈利的原因，不支持数字专辑的购买功能，请移步网易云，谢谢');
+        },
+        goToList(res, key) {
+          bully.setRMessage({
+            type: SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE,
+            data: {
+              ...res,
+              type: key
+            }
+          });
+          this.$router.push({name : 'list-view'});
+        },
+        playSong(param) {
+          if (param.targetId) {
+            songInfoService.getSongDetail(param.targetId).subscribe(res => {
+              if (res.code === 200) {
+                songInfoService.getSongUrl(param.targetId).subscribe(r => {
+                  if (res.code === 200) {
+                    const data = {...res.songs[0], ...r.data[0]};
+                    bully.setMessage({
+                      type: SYSTEM_EVENTS.PLAY_MUSIC,
+                      data
+                    });
+                  } else {
+                    this.$message.error('获取歌曲详情失败')
+                  }
+                });
+              } else {
+                this.$message.error('获取歌曲详情失败')
+              }
+            }, () => {
+              this.$message.error('获取歌曲详情失败')
+            });
+          }
         },
         getHomeInfo() {
           mainPageService.getHomeMainPagePic(0).subscribe(res => {

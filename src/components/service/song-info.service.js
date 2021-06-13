@@ -7,8 +7,12 @@ class SongInfoService {
   getUserPlaylist(uid) {
     return HTTPClient.post(`/user/playlist`, {uid}, {withTimeStamp: true});
   }
-  getSongDetail(id) {
+  getSongUrl(id) {
     return HTTPClient.get(`/song/url?id=${id}`, {withTimeStamp: true});
+  }
+  getSongDetail(ids) {
+    // ids 可以是歌曲id组成的数组，也可以是单个id
+    return HTTPClient.get(`/song/detail?ids=${ids}`, {withTimeStamp: true});
   }
   getPlaylistDetail(id) {
     return HTTPClient.get(`/playlist/detail?id=${id}`, {withTimeStamp: true});

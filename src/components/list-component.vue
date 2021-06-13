@@ -1,41 +1,92 @@
 <template>
     <div class="router-content">
       <div class="music-list">
-        <div class="music-list-header" v-if="!searchMode">
-          <div v-if="crtListInfo.coverImgUrl" class="music-list-img-box">
-            <img class="music-list-img" :src="crtListInfo.coverImgUrl" alt="">
+        <div class="music-list-header" v-if="!searchMode || showHeader">
+          <div v-if="crtListInfo.coverImgUrl || crtListInfo.picUrl" class="music-list-img-box">
+            <img class="music-list-img" :src="crtListInfo.coverImgUrl || crtListInfo.picUrl" alt="">
           </div>
           <div v-else class="music-list-img-box-empty">
             <i class="fa fa-music"></i>
           </div>
-          <div class="list-infos-box">
+
+          <div class="list-infos-box" v-if="crtHeaderType === 'playlists'">
             <div class="list-name">
               {{crtListInfo.name}}
             </div>
-            <div :style="{'display': userInfo ? 'block' : 'none'}" class="user-infos-box">
+            <div v-if="!searchMode && showHeader" class="user-infos-box">
               <img class="user-avatar" :src="userInfo.avatarUrl" alt="">
               <span>{{userInfo.nickname}}</span>
             </div>
+            <div v-else-if="searchMode && showHeader" class="user-infos-box">
+              <img class="user-avatar" :src="crtListInfo && crtListInfo.creator && crtListInfo.creator.avatarUrl" alt="">
+              <span>{{crtListInfo && crtListInfo.creator && crtListInfo.creator.nickname}}</span>
+            </div>
             <div class="user-infos-box">
-              <span>精心完善歌单信息有机会获得推荐，让更多用户看到你的大作</span>
+              <span>{{(crtListInfo && crtListInfo.description) || '精心完善歌单信息有机会获得推荐，让更多用户看到你的大作'}}</span>
             </div>
             <div class="btn-area">
               <a-button @click="getListDetail(false, true)">
                 <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
-              <!--<a-button @click="multiEdit('download')">
-                <a-icon type="download" title="下载"/>
-                <span>下载</span>
+              <a-button v-if="!searchInList" @click="toggleSearch(true)">
+                <a-icon type="search" title="搜索" />
+                <span>搜索</span>
               </a-button>
-              <a-button @click="multiEdit('remove')">
-                <a-icon type="delete" title="删除" />
-                <span>删除</span>
+              <a-input v-model="searchText" class="search-in-list" v-else @change="searchSongInList()" @blur="getSearchResultFromList()" @keypress.enter="getSearchResultFromList()">
+                <a-icon slot="prefix" @click="toggleSearch(false)" type="close" />
+              </a-input>
+              <a-button v-if="isEditMode">
+                <span>退出批量操作</span>
               </a-button>
-              <a-button @click="multiEdit('sort')">
-                <a-icon type="menu" title="排序" />
-                <span>排序</span>
-              </a-button>-->
+            </div>
+          </div>
+
+          <div v-else-if="crtHeaderType === 'albums'" class="list-infos-box">
+            <div class="list-name">
+              {{crtListInfo.name}}
+            </div>
+            <div class="list-information">
+             <span v-for="(auth, index) in (crtListInfo.ar || crtListInfo.artists)">
+               <span>{{auth.name}}</span><span v-if="index !== (crtListInfo.ar || crtListInfo.artists).length - 1">&nbsp;/&nbsp;</span>
+            </span>
+            </div>
+            <div class="list-information">
+              <span>发布时间：{{crtListInfo.publishTime | dateFormat('yyyy-MM-DD')}}</span><span style="margin-left: 2em">发行方：{{crtListInfo.company}}</span>
+            </div>
+            <div class="user-infos-box">
+              <span>{{(crtListInfo && crtListInfo.description) || '精心完善歌单信息有机会获得推荐，让更多用户看到你的大作'}}</span>
+            </div>
+            <div class="btn-area">
+              <a-button @click="getListDetail(false, true)">
+                <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
+                <span>播放全部</span>
+              </a-button>
+              <a-button v-if="!searchInList" @click="toggleSearch(true)">
+                <a-icon type="search" title="搜索" />
+                <span>搜索</span>
+              </a-button>
+              <a-input v-model="searchText" class="search-in-list" v-else @change="searchSongInList()" @blur="getSearchResultFromList()" @keypress.enter="getSearchResultFromList()">
+                <a-icon slot="prefix" @click="toggleSearch(false)" type="close" />
+              </a-input>
+              <a-button v-if="isEditMode">
+                <span>退出批量操作</span>
+              </a-button>
+            </div>
+          </div>
+
+          <div v-else-if="crtHeaderType === 'ranklist'" class="list-infos-box">
+            <div class="list-name">
+              {{crtListInfo.name}}
+            </div>
+            <div class="list-information">
+              <span>更新时间：{{crtListInfo.updateTime | dateFormat('yyyy-MM-DD')}}</span>
+            </div>
+            <div class="btn-area">
+              <a-button @click="getListDetail(false, true)">
+                <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
+                <span>播放全部</span>
+              </a-button>
               <a-button v-if="!searchInList" @click="toggleSearch(true)">
                 <a-icon type="search" title="搜索" />
                 <span>搜索</span>
@@ -77,7 +128,8 @@
   import {Subject} from "rxjs";
   import {debounceTime} from "rxjs/operators";
   import {PY} from "../assets/ChinesePY";
-    export default {
+
+  export default {
       name: "list-component",
       components: {
         tableInList
@@ -86,12 +138,14 @@
         return {
           subscription: [],
           searchMode: false,
+          showHeader: true,
           searchInList: false,
           searchText: '',
           isEditMode: false,
           searchText$: new Subject(),
           crtListInfo: {},
           playingListIdx: 0,
+          crtHeaderType: 'playlists',
           crtListInfoIdx: 0,
           songs: [],
           currentSearchData: [],
@@ -235,12 +289,96 @@
             this.currentSearchData = res.data.data[res.data.type];
             // this.currentSongIdx = -1;
             this.searchMode = true;
+            this.showHeader = false;
             this.hasMore = res.data.data.hasMore;
             if (res.data.type === 'album') {
             } else {
             }
           }
-
+          if (res.type === SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE) {
+            console.log(res.data);
+           if (res.data && (res.data.targetId || res.data.id)) {
+             switch (res.data.type) {
+               case 'albums' : {
+                 songInfoService.getAlbum(res.data.targetId || res.data.id).subscribe(response => {
+                   if (response.code === 200) {
+                     if (!response.songs) {
+                       return;
+                     }
+                     this.searchMode = true;
+                     this.showHeader = true;
+                     this.crtHeaderType  = res.data.type;
+                     this.currentSearchData = response.songs.map(item => (
+                       {...item, artists: item.ar, album: item.al, duration: item.dt, rowName: {
+                           name: item.name,
+                           hover: false
+                         }
+                       })
+                     );
+                     this.crtListInfo = res.data;
+                   } else {
+                     this.$message.error('获取歌单详情失败')
+                   }
+                 }, () => {
+                   this.$message.error('获取歌单详情失败')
+                 });
+                 break;
+               }
+               case 'playlists' : {
+                 songInfoService.getPlaylistDetail(res.data.targetId || res.data.id).subscribe(response => {
+                   if (response.code === 200) {
+                     console.log(response);
+                     if (!response.playlist) {
+                       return;
+                     }
+                     this.searchMode = true;
+                     this.showHeader = true;
+                     this.crtHeaderType  = res.data.type;
+                     this.currentSearchData = response.playlist.tracks.map(item => (
+                       {...item, artists: item.ar, album: item.al, duration: item.dt, rowName: {
+                           name: item.name,
+                           hover: false
+                         }
+                       })
+                     );
+                     this.crtListInfo = response.playlist;
+                   } else {
+                     this.$message.error('获取歌单详情失败')
+                   }
+                 }, () => {
+                   this.$message.error('获取歌单详情失败')
+                 });
+                 break;
+               }
+               case 'ranklist' : {
+                 songInfoService.getPlaylistDetail(res.data.targetId || res.data.id).subscribe(response => {
+                   if (response.code === 200) {
+                     console.log(response);
+                     if (!response.playlist) {
+                       return;
+                     }
+                     this.searchMode = true;
+                     this.showHeader = true;
+                     this.crtHeaderType  = res.data.type;
+                     this.currentSearchData = response.playlist.tracks.map(item => (
+                       {...item, artists: item.ar, album: item.al, duration: item.dt, rowName: {
+                           name: item.name,
+                           hover: false
+                         }
+                       })
+                     );
+                     this.crtListInfo = response.playlist;
+                   } else {
+                     this.$message.error('获取歌单详情失败')
+                   }
+                 }, () => {
+                   this.$message.error('获取歌单详情失败')
+                 });
+                 break;
+               }
+             }
+           }
+          }
         })
         this.subscription.push(sub, subR, s);
       },
@@ -291,7 +429,7 @@
               data.dt = data.duration;
               this.currentSongIdx = this.currentSearchData.findIndex(item => item.id === data.id);
               console.log(this.currentSongIdx);
-              songInfoService.getSongDetail(data.id).subscribe(res => {
+              songInfoService.getSongUrl(data.id).subscribe(res => {
                 console.log(res);
                 data = {...data, ...res.data[0]};
                 bully.setMessage({
@@ -355,7 +493,7 @@
           if (!this.songs.length) {
             return;
           }
-          songInfoService.getSongDetail(this.songs[this.currentSongIdx].id).subscribe(res => {
+          songInfoService.getSongUrl(this.songs[this.currentSongIdx].id).subscribe(res => {
             this.playingListIdx = this.crtListInfoIdx;
             const data = {...this.songs[this.currentSongIdx], ...res.data[0], crtListId: this.crtListInfo.id};
             bully.setMessage({
@@ -369,8 +507,10 @@
         },
         setCrtList(i, playSong = false) {
           if (this.searchMode) {
+            this.showHeader = true;
             this.searchMode = false;
             this.currentSongIdx = 0;
+            this.crtHeaderType  = 'playlists';
           }
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
@@ -445,6 +585,9 @@
       .list-infos-box{
         margin-left: 20px;
         height: $max;
+        width: auto;
+        max-width: $max;
+        overflow: auto;
         @include flex(column, space-between, flex-start);
         .list-name{
           font-size: 1.8em;
@@ -457,6 +600,7 @@
         }
         .user-infos-box{
           color: $black;
+          white-space: nowrap;
           @include flex(row, flex-start, center);
           .user-avatar{
             width: 30px;
