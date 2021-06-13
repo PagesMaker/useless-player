@@ -37,7 +37,7 @@
              </div>
            </div>
            <div class="list-netease-content">
-             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo">
+             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo" @click="playlistsHandle(item, 'playlists')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250'  + ')'  : 'unset'}">
                    <div class="listen-times">
@@ -65,7 +65,7 @@
              </div>
            </div>
            <div class="list-netease-content new-album">
-             <div class="box-wrapper" v-for="(item, index) in albumInfo">
+             <div class="box-wrapper" v-for="(item, index) in albumInfo"  @click="playlistsHandle(item, 'albums')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
                    <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
@@ -91,7 +91,7 @@
              </div>
            </div>
            <div class="rank-list-content list-netease-content">
-             <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList">
+             <div class="rank-list-wrapper box-wrapper"  @mouseenter="selectedIndex.ranklist = index"  @mouseleave="selectedIndex.ranklist = -1" v-for="(item, index) in rankList" @click="playlistsHandle(item, 'ranklist')">
                <div class="rank-list-l">
                  <div class="rank-list-l-wrapper">
                    <div class="list-bg" :style="{backgroundImage: item.coverImgUrl ? 'url(' + item.coverImgUrl + '?param=250y250' + ')'  : 'unset'}">
@@ -195,13 +195,18 @@
           // 可能根本不会进这个
         },
         radioHandle (...args) {
-          // 没有设计电台的功能
+          // 没有设计电台的功能，有需求可以自己加
         },
         videoHandle (...args) {
           // todo
+          this.$message.warning('尚未实现');
         },
         comprehensiveHandle (...args) {
           // todo
+          this.$message.warning('尚未实现');
+        },
+        digitalHandle(...args) {
+          this.$message.warning('因为版权问题和本站非盈利的原因，不支持数字专辑的购买功能，请移步网易云，谢谢');
         },
         goToList(res, key) {
           bully.setRMessage({

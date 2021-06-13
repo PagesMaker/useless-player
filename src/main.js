@@ -21,6 +21,12 @@ Vue.filter('timeFormat', function (value, format = '') {
   }
   return moment({minute: Math.floor(value / 60), second: value % 60}).format(format);
 })
+Vue.filter('dateFormat', function (value, format = '') {
+  if (isNaN(value) ||  typeof value !== 'number') {
+    value = 0;
+  }
+  return moment(value).format(format);
+})
 Vue.filter('tenThousands', function (value, afterPointNumberLength = 0) {
   return (value / 1e4).toFixed(afterPointNumberLength) + '万';
 })

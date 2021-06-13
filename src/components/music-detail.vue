@@ -70,7 +70,6 @@
         },
         changeLyricsProcess(time) {
           this.currentTime = time + this.startTime;
-          console.log(time);
           if (!(this.$refs.lyricsRow && this.$refs.lyricsRow.length)) {
             return;
           }

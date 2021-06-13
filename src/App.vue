@@ -6,7 +6,13 @@
 
 <script>
 export default {
-	name: 'App'
+	name: 'App',
+  mounted() {
+    console.log(window.innerWidth);
+    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+      this.$message.warning('暂未完成手机端适配，请使用桌面端获取更好的体验');
+    }
+  }
 }
 </script>
 
