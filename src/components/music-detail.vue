@@ -167,7 +167,7 @@
       position: relative;
       width: $max;
       height: $max;
-      z-index: 1001;
+      z-index: $z1e7;
       .close-music-detail{
         position: absolute;
         font-size: 1.2em;
