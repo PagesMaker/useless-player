@@ -6,13 +6,7 @@
 
 <script>
 export default {
-	name: 'App',
-  mounted() {
-    console.log(window.innerWidth);
-    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
-      this.$message.warning('暂未完成手机端适配，请使用桌面端获取更好的体验');
-    }
-  }
+	name: 'App'
 }
 </script>
 
@@ -36,7 +30,7 @@ export default {
   }
   .anticon{
     cursor: pointer!important;
-    color: rgb(160,160,160);
+    color: rgb(160,160,160) !important;
   }
   .router-content{
     height: 100%;
@@ -44,6 +38,9 @@ export default {
     padding: 30px;
   }
   .anticon:hover{
-    color: $blue;
+    color: $blue!important;
+  }
+  .adjust-sound-overlay-content.ant-dropdown{
+    z-index: 10500!important;
   }
 </style>

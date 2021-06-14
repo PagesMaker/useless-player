@@ -557,7 +557,8 @@
       min-height: 400px;
     }
     .music-list-header{
-      height: 165px;
+      min-height: 165px;
+      height: auto;
       width: $max;
       @include flex(row, flex-start, center);
       .music-list-img-box{
@@ -598,9 +599,11 @@
           border: none;
           box-shadow: unset;
         }
+        >div {
+          padding: 3px 0;
+        }
         .user-infos-box{
           color: $black;
-          white-space: nowrap;
           @include flex(row, flex-start, center);
           .user-avatar{
             width: 30px;

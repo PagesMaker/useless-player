@@ -115,6 +115,11 @@
       }
     },
     mounted() {
+      if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+        this.$confirm({
+          content: () => '暂未完成手机端适配，请使用桌面端获取更好的体验'
+        });
+      }
       setTimeout(() => {
         const cookie = localStorage.getItem('cookie');
         if (cookie && cookie.includes('__csrf')) {
