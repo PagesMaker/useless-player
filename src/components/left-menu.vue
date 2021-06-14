@@ -35,12 +35,7 @@
           </a-tooltip>
         </a-menu-item>
         <a-menu-item :key="4">
-          <a-tooltip placement="topLeft">
-            <template slot="title">
-              <span>暂未实现</span>
-            </template>
             <a-icon type="history" />播放历史
-          </a-tooltip>
         </a-menu-item>
         <a-menu-item :key="5">
           <a-tooltip placement="topLeft">
@@ -304,11 +299,24 @@
           return;
         }
         this.selectedKeys = [e.key];
+        let mode = '';
         if (e.key === 1) {
           this.$router.push({name : 'main-page'});
+          return;
         } else if (e.key >= 6) {
           this.$router.push({name : 'list-view'});
+          return;
+        } else if (e.key === 3) {
+          this.$router.push({path : '/my-music/my-favorite'});
+          mode = 'my-favorite';
+        } else if (e.key === 5) {
+          this.$router.push({path : '/my-music/audition-list'});
+          mode = 'audition-list';
+        } else if (e.key === 4) {
+          this.$router.push({path : '/my-music/played-music-list'});
+          mode = 'played-music-list';
         }
+        bully.setRMessage({type : SYSTEM_EVENTS.SWITCH_ROUTER, data : mode});
       },
       titleClick(e) {
         console.log('titleClick', e);

@@ -1,9 +1,9 @@
 <template>
     <div class="footer-content">
       <div class="footer">
-        <p>Copyright © 2021</p>
+        <p>Copyright © 2021 成杰</p>
         <p>Powered by vue2.0 & antd & <a target="_blank" href="https://github.com/Binaryify/NeteaseCloudMusicApi">NeteaseCloudMusicApi</a></p>
-        <a target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index"> </a>
+        <a target="_blank" href="https://beian.miit.gov.cn/#/Integrated/index">蜀ICP备2021014234号</a>
       </div>
     </div>
 </template>

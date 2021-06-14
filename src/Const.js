@@ -15,7 +15,8 @@ export const SYSTEM_EVENTS = {
   GOT_SONG_LIST_FROM_BACKEND: 'got-song-list-from-backend',
   SONG_LIST_REFRESH_BY_GET_LIST: 'song-list-refresh-by-get-list',
   GET_SONG_URL: 'get-song-url',
-  MULTI_PURPOSE_HANDLE: 'multi-purpose-handle'
+  MULTI_PURPOSE_HANDLE: 'multi-purpose-handle',
+  SWITCH_ROUTER: 'switch-router'
 }
 export const APP = {
   MIN_WIDTH: 1080,

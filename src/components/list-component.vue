@@ -8,7 +8,6 @@
           <div v-else class="music-list-img-box-empty">
             <i class="fa fa-music"></i>
           </div>
-
           <div class="list-infos-box" v-if="crtHeaderType === 'playlists'">
             <div class="list-name">
               {{crtListInfo.name}}
@@ -219,7 +218,7 @@
           ]
         }
       },
-      mounted() {
+    mounted() {
         this.initCrtListInfo();
         const s = this.searchText$.asObservable().pipe(debounceTime(400)).subscribe(() => {
           this.getSearchResultFromList();
@@ -229,7 +228,7 @@
           this.userInfo = UserInfos.userInfo;
           this.getListInfo(UserInfos.userInfo);
         }
-        const sub =  bully.getMessage().subscribe(res => {
+        const sub = bully.getMessage().subscribe(res => {
           if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
             this.getListInfo(res.data);
             this.userInfo = UserInfos.userInfo;

@@ -44,6 +44,32 @@ export default new Router({
               name: 'main-page',
               component: resolve => require(['../components/main-page'], resolve),
               meta: { keepAlive:true }
+            },
+            {
+              path: '/my-music',
+              name: 'my-music',
+              component: resolve => require(['../components/my-music'], resolve),
+              meta: { keepAlive:true },
+              children: [
+                {
+                  path: 'played-music-list',
+                  name: 'played-music-list',
+                  component: resolve => require(['../components/my-music'], resolve),
+                  meta: { keepAlive:true }
+                },
+                {
+                  path: 'audition-list',
+                  name: 'audition-list',
+                  component: resolve => require(['../components/my-music'], resolve),
+                  meta: { keepAlive:true }
+                },
+                {
+                  path: 'my-favorite',
+                  name: 'my-favorite',
+                  component: resolve => require(['../components/my-music'], resolve),
+                  meta: { keepAlive:true }
+                }
+              ]
             }
           ]
 				}
