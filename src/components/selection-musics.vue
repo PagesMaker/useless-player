@@ -206,7 +206,7 @@
           this.$message.warning('尚未实现');
         },
         digitalHandle(...args) {
-          this.$message.warning('因为版权问题和本站非盈利的原因，不支持数字专辑的购买功能，请移步网易云，谢谢');
+          this.$message.warning('因为版权问题和本站非盈利的原因，不支持数字专辑的购买功能，请移步网易云');
         },
         goToList(res, key) {
           bully.setRMessage({
@@ -360,9 +360,10 @@
           width: 25px;
           height: 25px;
           font-size: 25px;
-          z-index: $z1e4;
-          color: rgb(31, 45, 61);
-          opacity: 0.7;
+          z-index: 1001;
+        }
+        .custom-slick-arrow i{
+          color: gray;
         }
         .custom-slick-arrow:before {
           display: none;

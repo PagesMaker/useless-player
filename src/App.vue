@@ -28,17 +28,17 @@ export default {
   .blue-bg{
     background-color: $blue;
   }
-  .anticon{
+  i.anticon{
     cursor: pointer!important;
-    color: rgb(160,160,160) !important;
+    color: rgb(160,160,160);
   }
   .router-content{
     height: 100%;
     width: 100%;
     padding: 30px;
   }
-  .anticon:hover{
-    color: $blue!important;
+  i.anticon:hover{
+    color: $blue;
   }
   .adjust-sound-overlay-content.ant-dropdown{
     z-index: 10500!important;

@@ -346,10 +346,13 @@
                     this.startTime = 0
                   }*/
                   if (this.songInfo.fee === 1 && this.songInfo.freeTrialInfo && UserInfos.userInfo.vipType === 0) {
-                    this.$message.warning('该歌曲为收费曲目，只能试听15秒');
+                    this.$message.warning('该歌曲为vip曲目，只能试听15秒。因为版权问题和本站非盈利的原因，不支持充值vip功能，请移步网易云');
                     this.startTime = this.songInfo.freeTrialInfo.start;
                   } else if (this.songInfo.fee === 1 && !this.songInfo.freeTrialInfo && UserInfos.userInfo.vipType === 0) {
-                    this.$message.warning('该歌曲为收费曲目');
+                    this.$message.warning('该歌曲为vip曲目。因为版权问题和本站非盈利的原因，不支持充值vip功能，请移步网易云');
+                    return;
+                  } else if (this.songInfo.fee > 1 && !this.songInfo.payed === 0) {
+                    this.$message.warning('该歌曲为收费曲目。因为版权问题和本站非盈利的原因，不支持购买数字专辑功能，请移步网易云');
                     return;
                   } else {
                     this.startTime = 0

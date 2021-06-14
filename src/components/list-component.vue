@@ -226,6 +226,7 @@
         });
         if (UserInfos.userInfo.id) {
           console.log(UserInfos);
+          this.userInfo = UserInfos.userInfo;
           this.getListInfo(UserInfos.userInfo);
         }
         const sub =  bully.getMessage().subscribe(res => {
@@ -315,7 +316,7 @@
                          }
                        })
                      );
-                     this.crtListInfo = res.data;
+                     this.crtListInfo = response.album;
                    } else {
                      this.$message.error('获取歌单详情失败')
                    }
