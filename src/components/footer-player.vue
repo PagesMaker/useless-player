@@ -585,6 +585,7 @@
   }
   .ant-modal-wrap.music-details{
     overflow: hidden;
+    z-index: 1001;
     width: $max!important;
     height: $max!important;
     .ant-modal {

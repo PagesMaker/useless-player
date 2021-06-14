@@ -30,7 +30,7 @@ export default {
   }
   .anticon{
     cursor: pointer!important;
-    color: rgb(160,160,160);
+    color: rgb(160,160,160) !important;
   }
   .router-content{
     height: 100%;
@@ -38,6 +38,9 @@ export default {
     padding: 30px;
   }
   .anticon:hover{
-    color: $blue;
+    color: $blue!important;
+  }
+  .adjust-sound-overlay-content.ant-dropdown{
+    z-index: 10500!important;
   }
 </style>
