@@ -2,9 +2,11 @@
 
 > 一个仿QQ音乐桌面端UI，以网易云音乐为后台的播放器
 
-#### 不一定最强大但是也不一定最好用的网易云播放器（缓慢建设中）
+### 不一定最强大但是也不一定最好用的网易云播放器（缓慢建设中）
 
-#### 技术栈：
+### 界面仿照QQ音乐，目前实现的功能有登录，首页，个人歌单的CRUD，搜索歌曲，歌曲详情，歌曲播放，歌词进度（即歌词颜色渐变），其余还在制作中
+
+### 技术栈：
 1. vue2
 2. antd of vue
 3. rxjs
@@ -14,7 +16,6 @@
 ### 备注
 需先clone并运行[网易云API](https://github.com/Binaryify/NeteaseCloudMusicApi)
 
-[线上地址](http://uselessplayer.nuvole.top)
-
+### [线上地址](http://uselessplayer.nuvole.top)
 
 
