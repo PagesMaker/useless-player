@@ -1,7 +1,7 @@
 <template>
   <div class="inside-table-listing">
     <a-tabs v-if="!searchMode" default-active-key="1" @change="tabChanged(e)">
-      <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)">
+      <a-tab-pane key="1" :tab="'歌曲 ' + (songs ? songs.length : 0)" v-if="availableTabs.includes('song')">
         <a-table :pagination="false" class="song-listing" size="small" :columns="columns" :data-source="songs" @change="handleTableChange" :customRow="setRowBehaviour">
           <div slot="name" slot-scope="text, record, index" class="row-of-song-name" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''">
             <div slot="heart" class="heart-icon" >
@@ -29,10 +29,19 @@
           <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentListPlaying && currentSongIdx === index ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
         </a-table>
       </a-tab-pane>
-      <a-tab-pane key="2" tab="最近收藏">
+      <a-tab-pane key="2" tab="最近收藏" v-if="availableTabs.includes('recentCollected')">
 
       </a-tab-pane>
-      <a-tab-pane key="3" tab="评论">
+      <a-tab-pane key="3" tab="评论" v-if="availableTabs.includes('comment')">
+
+      </a-tab-pane>
+      <a-tab-pane key="4" tab="歌单" v-if="availableTabs.includes('playlist')">
+
+      </a-tab-pane>
+      <a-tab-pane key="5" tab="专辑" v-if="availableTabs.includes('album')">
+
+      </a-tab-pane>
+      <a-tab-pane key="6" tab="视频" v-if="availableTabs.includes('video')">
 
       </a-tab-pane>
     </a-tabs>
@@ -65,7 +74,7 @@
                         <span class="blue-hover">{{auth.name}}</span><span v-if="index !== text.length - 1">&nbsp;/&nbsp;</span>
                    </span>
                 </span>
-          <span slot="album":title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
+          <span slot="album" :title="text.name" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text.name }}</span>
           <span slot="time" :title="text" class="blue-hover row-of-album" :class="currentSongIdx === index && searchMode && isPlaySearchSong ? 'is-playing' : ''" slot-scope="text, record, index">{{ text / 1000 | timeFormat('mm:ss')}}</span>
 
         </a-table>
@@ -89,15 +98,14 @@
             tabs: [],
             subscription: [],
             currentSelectedRow: -1,
-            showIcon: []
+            showIcon:  ['play', 'comment', 'deleteFromList', 'download', 'shared', 'addToList']
           }
       },
       mounted() {
-        this.initShowIcons();
+        this.initShowTabs();
         const subR = bully.getRMessage().subscribe(res => {
         })
         this.subscription.push(subR);
-        console.log(this.songs)
       },
       destroyed() {
         for (const ite of this.subscription) {
@@ -111,8 +119,7 @@
         handleTableChange(pagination, filters, sorter) {
           this.$emit('handleTableChange', {pagination, filters, sorter});
         },
-        initShowIcons() {
-          this.showIcon = ['play', 'comment', 'deleteFromList', 'download', 'shared', 'addToList'];
+        initShowTabs() {
         },
         tabChanged(e) {},
         getTitle(data) {
@@ -139,7 +146,7 @@
         jumpToAuthorPage(auth) {
         },
         handleDownload(idx) {
-          console.log(this.songs[idx]);
+          console.log(this.songs, idx);
           songInfoService.getSongUrl(this.songs[idx].id).subscribe(async res => {
             if (res.code === 200) {
               for (const item of res.data) {
@@ -201,7 +208,7 @@
           })
         }
       },
-      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying', 'crtListInfo'],
+      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying', 'crtListInfo', 'availableTabs'],
       watch: {
         searchMode: {
           handler(e) {
@@ -231,6 +238,7 @@
   /deep/ .ant-table-small{
     border: none;
   }
+
   /deep/ .ant-table-fixed-left{
     width: $max;
     .ant-table-fixed{

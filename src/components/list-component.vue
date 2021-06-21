@@ -3,7 +3,7 @@
       <div class="music-list">
         <div class="music-list-header" v-if="!searchMode || showHeader">
           <div v-if="crtListInfo.coverImgUrl || crtListInfo.picUrl" class="music-list-img-box">
-            <img class="music-list-img" :src="crtListInfo.coverImgUrl || crtListInfo.picUrl" alt="">
+            <img class="music-list-img" :src="(crtListInfo.coverImgUrl || crtListInfo.picUrl) + '?param=250y250'" alt="">
           </div>
           <div v-else class="music-list-img-box-empty">
             <i class="fa fa-music"></i>
@@ -103,6 +103,7 @@
           <table-in-list
             :currentListPlaying="crtListInfoIdx === playingListIdx"
             :crtListInfo="crtListInfo"
+            :availableTabs="['song', 'recentCollected', 'comment']"
             :search-mode="searchMode"
             :songs="searchMode ? currentSearchData : songs"
             :currentSongIdx="currentSongIdx"

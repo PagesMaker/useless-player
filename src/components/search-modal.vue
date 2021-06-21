@@ -51,7 +51,7 @@
                 <ul class="sa-listing">
                   <li class="sa-list-items" :title="subItem.description || subItem.name" @click="searchByClick(getSearchData(subItem, searchAdviceListOrder[idx]), searchAdviceListOrder[idx])" v-for="subItem in searchAdviceList[idx][item]">
                     <div v-if="item === 'albums' || item === 'playlists' || item === 'artists'" class="img-box">
-                      <img :src="subItem.imageUrl" alt="" draggable="false">
+                      <img :src="subItem.imageUrl  + '?param=50y50'" alt="" draggable="false">
                     </div>
                     <span v-for="font in subItem.splitedName"
                           v-if="item === 'songs' || item === 'albums' || item === 'playlists'"

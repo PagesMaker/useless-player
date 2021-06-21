@@ -27,23 +27,13 @@
       <a-sub-menu key="sub2" @titleClick="titleClick">
         <span slot="title"><span>我的音乐</span></span>
         <a-menu-item :key="3">
-          <a-tooltip placement="topLeft">
-            <template slot="title">
-              <span>暂未实现</span>
-            </template>
             <a-icon type="star" />我喜欢
-          </a-tooltip>
         </a-menu-item>
         <a-menu-item :key="4">
             <a-icon type="history" />播放历史
         </a-menu-item>
         <a-menu-item :key="5">
-          <a-tooltip placement="topLeft">
-            <template slot="title">
-              <span>暂未实现</span>
-            </template>
             <a-icon type="menu" />试听列表
-          </a-tooltip>
         </a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub3">
@@ -198,7 +188,7 @@
         }
       },
       renameSongList() {
-        if (!this.selectedEditItem.name || this.selectedEditItem.name === this.songLists[this.contextMenuIdx].name) {
+        if (!this.selectedEditItem.name || this.selectedEditItem.name === this.songLists[this.selectedEditItem.index].name) {
           this.selectedEditItem.index = -1;
           return;
         }
@@ -280,6 +270,7 @@
           console.log(res);
           if (res.code === 200) {
             this.songLists = res.playlist;
+            console.log(this.songLists);
             if (type !== SYSTEM_EVENTS.SONG_LIST_REFRESH && location.href.includes('list-view')) {
               this.selectedKeys = [this.startKeyIdx];
             }
@@ -308,13 +299,13 @@
           return;
         } else if (e.key === 3) {
           this.$router.push({path : '/my-music/my-favorite'});
-          mode = 'my-favorite';
+          mode = 'myFavorite';
         } else if (e.key === 5) {
           this.$router.push({path : '/my-music/audition-list'});
-          mode = 'audition-list';
+          mode = 'auditionList';
         } else if (e.key === 4) {
           this.$router.push({path : '/my-music/played-music-list'});
-          mode = 'played-music-list';
+          mode = 'playedMusicList';
         }
         bully.setRMessage({type : SYSTEM_EVENTS.SWITCH_ROUTER, data : mode});
       },

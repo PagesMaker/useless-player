@@ -37,7 +37,7 @@
              </div>
            </div>
            <div class="list-netease-content">
-             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo" @click="playlistsHandle(item, 'playlists')">
+             <!--<div class="box-wrapper" v-for="(item, index) in neteaseListInfo" @click="playlistsHandle(item, 'playlists')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.neteaseListInfo = index"  @mouseleave="selectedIndex.neteaseListInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250'  + ')'  : 'unset'}">
                    <div class="listen-times">
@@ -52,6 +52,18 @@
                <div class="list-link">
                  <span>{{item.name}}</span>
                </div>
+             </div>-->
+             <div class="box-wrapper" v-for="(item, index) in neteaseListInfo" >
+               <songs-item
+                 :item="item"
+                 :index="index"
+                 :type="'playlists'"
+                 :showSingerName="false"
+                 :showPlayCount="true"
+                 :selectedIndex="selectedIndex.neteaseListInfo"
+                 @playlistsHandle="playlistsHandle(item, $event)"
+                 @selectedIndexHandle="selectedIndex.neteaseListInfo = $event"
+               ></songs-item>
              </div>
            </div>
          </div>
@@ -65,7 +77,7 @@
              </div>
            </div>
            <div class="list-netease-content new-album">
-             <div class="box-wrapper" v-for="(item, index) in albumInfo"  @click="playlistsHandle(item, 'albums')">
+             <!--<div class="box-wrapper" v-for="(item, index) in albumInfo"  @click="playlistsHandle(item, 'albums')">
                <div class="list-bg-wrapper"  @mouseenter="selectedIndex.albumInfo = index"  @mouseleave="selectedIndex.albumInfo = -1">
                  <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250' + ')'  : 'unset'}">
                    <div class="box-wrapper-mask" v-show="selectedIndex.albumInfo === index">
@@ -78,6 +90,18 @@
                  <br/>
                  <span>{{item.artist.name}}</span>
                </div>
+             </div>-->
+             <div class="box-wrapper" v-for="(item, index) in albumInfo" >
+               <songs-item
+                 :item="item"
+                 :index="index"
+                 :type="'albums'"
+                 :showSingerName="true"
+                 :showPlayCount="false"
+                 :selectedIndex="selectedIndex.albumInfo"
+                 @playlistsHandle="playlistsHandle(item, $event)"
+                 @selectedIndexHandle="selectedIndex.albumInfo = $event"
+               ></songs-item>
              </div>
            </div>
          </div>
@@ -128,12 +152,13 @@
     import {songInfoService} from "./service/song-info.service";
     import {forkJoin} from "rxjs";
     import pageFooter from './page-footer';
+    import songsItem from './songs-item';
     import {bully} from "./service/bully";
     import {SYSTEM_EVENTS} from "../Const";
 
     export default {
       name: "selection-musics",
-      components: {pageFooter},
+      components: {pageFooter, songsItem},
       data() {
         return {
           selectedIndex: {
@@ -427,60 +452,6 @@
         .box-wrapper{
           width: 1.2rem;
           @include flex(column, flex-start, space-between);
-          .list-bg-wrapper{
-            width: 1.2rem;
-            height: 1.2rem;
-          }
-          .list-bg{
-            background-repeat: round;
-            background-attachment: local;
-            position: relative;
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 20px;
-            .box-wrapper-mask{
-              position: absolute;
-              top: 0;
-              left: 0;
-              opacity: 0;
-              border-radius: 20px;
-              @include flex(column, center, center);
-              width: $max;
-              height: $max;
-              background-color: rgba(0,0,0,0.75);
-              /deep/ .anticon{
-                color: white;
-                font-size: 4em;
-                -webkit-animation: showMask 0.25s linear normal;
-                -moz-animation: showMask 0.25s linear normal;
-                animation: showMask 0.25s linear normal;
-                animation-fill-mode: forwards;
-              }
-              /deep/ .anticon:hover{
-                color: $deepBlue;
-              }
-            }
-          }
-          .list-bg-wrapper:hover {
-            cursor: pointer;
-            -webkit-animation: moveIn 0.25s linear normal;
-            -moz-animation: moveIn 0.25s linear normal;
-            animation: moveIn 0.25s linear normal;
-            animation-fill-mode: forwards;
-          }
-          .box-wrapper-mask:hover{
-            -webkit-animation: showMask 0.25s linear normal;
-            -moz-animation: showMask 0.25s linear normal;
-            animation: showMask 0.25s linear normal;
-            animation-fill-mode: forwards;
-          }
-          .list-link{
-            margin-top: 10px;
-          }
-          .list-link span:hover{
-            color: $blue;
-            cursor: pointer;
-          }
         }
       }
       .rank-list-content:hover{
@@ -498,6 +469,60 @@
         }
         .box-wrapper:nth-child(3n){
           margin-right:0
+        }
+        .list-bg-wrapper{
+          width: 1.2rem;
+          height: 1.2rem;
+        }
+        .list-bg{
+          background-repeat: round;
+          background-attachment: local;
+          position: relative;
+          width: 1.2rem;
+          height: 1.2rem;
+          border-radius: 20px;
+          .box-wrapper-mask{
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            border-radius: 20px;
+            @include flex(column, center, center);
+            width: $max;
+            height: $max;
+            background-color: rgba(0,0,0,0.75);
+            /deep/ .anticon{
+              color: white;
+              font-size: 4em;
+              -webkit-animation: showMask 0.25s linear normal;
+              -moz-animation: showMask 0.25s linear normal;
+              animation: showMask 0.25s linear normal;
+              animation-fill-mode: forwards;
+            }
+            /deep/ .anticon:hover{
+              color: $deepBlue;
+            }
+          }
+        }
+        .list-bg-wrapper:hover {
+          cursor: pointer;
+          -webkit-animation: moveIn 0.25s linear normal;
+          -moz-animation: moveIn 0.25s linear normal;
+          animation: moveIn 0.25s linear normal;
+          animation-fill-mode: forwards;
+        }
+        .box-wrapper-mask:hover{
+          -webkit-animation: showMask 0.25s linear normal;
+          -moz-animation: showMask 0.25s linear normal;
+          animation: showMask 0.25s linear normal;
+          animation-fill-mode: forwards;
+        }
+        .list-link{
+          margin-top: 10px;
+        }
+        .list-link span:hover{
+          color: $blue;
+          cursor: pointer;
         }
         .rank-list-wrapper {
           background-color: #EFEFEF;

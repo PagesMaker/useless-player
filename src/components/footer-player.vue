@@ -6,7 +6,7 @@
     <div class="song-area">
       <div class="song-info">
         <div v-if="(songInfo.al || songInfo.album).picUrl !== '' && !musicDetailShow" @mouseenter="pictureHover = true" @mouseleave="pictureHover = false" @click="openMusicDetail()" class="song-image">
-          <img :src="(songInfo.al || songInfo.album).picUrl" alt="" :style="{filter: pictureHover ? 'brightness(0.7)' : 'unset'}">
+          <img :src="(songInfo.al || songInfo.album).picUrl + '?param=50y50'" alt="" :style="{filter: pictureHover ? 'brightness(0.7)' : 'unset'}">
           <a-icon v-if="pictureHover" class="song-image-icon" type="double-left"/>
         </div>
         <div class="song-image blue-bg" style="opacity: 0.7" v-else-if="(songInfo.al || songInfo.album).picUrl === '' && !musicDetailShow">
@@ -173,29 +173,24 @@
         })
       },
       autoSwitchMusic(switchSong = true) {
+        let type = 'next';
         switch (this.musicControl.playMode) {
-          case "list": {
-            bully.setMessage({
-              type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: {type : 'next', switchSong}
-            })
+          case 'list': {
             break;
           }
-          case "single": {
-            bully.setMessage({
-              type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: {type : 'current', switchSong}
-            })
+          case 'single': {
+            type = 'current';
             break;
           }
-          case "list loop": {
-            bully.setMessage({
-              type: SYSTEM_EVENTS.SWITCH_SONG,
-              data: {type : 'list loop', switchSong}
-            })
+          case 'list loop': {
+            type = 'list loop';
             break;
           }
         }
+        bully.setMessage({
+          type: SYSTEM_EVENTS.SWITCH_SONG,
+          data: {type, switchSong}
+        })
       },
       handleDownload() {
         songInfoService.getSongUrl(this.songInfo.id).subscribe(async res => {
@@ -206,7 +201,7 @@
               let objectUrl = window.URL.createObjectURL(blob);
               let a = document.createElement('a');
               a.href = objectUrl;
-              a.download = `${this.songInfo.name}.${item.type}`;
+              a.download = `${this.songInfo.name}.${item.type || 'mp3'}`;
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
@@ -432,7 +427,6 @@
   }
   .footer-player-content-box {
     width: $max;
-
     /deep/ .anticon {
       font-size: 1.2em;
     }
@@ -440,7 +434,7 @@
     .process-bar {
       width: $max;
       height: 3px;
-      background-color: $gray;
+      background-color: #C6D7E7;
     }
 
     .song-area {
@@ -578,9 +572,9 @@
     background-color: #E3E3E3;
 
     .sound-tool-bar-area {
-      @include flex(column, flex-start, center);
-      width: 5%;
+      width: 3px;
       height: 70%;
+      background-color: #C6D7E7;
     }
   }
   .muted-area{

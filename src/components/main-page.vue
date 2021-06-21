@@ -11,7 +11,7 @@
                        :isCurrent="index === selectedIndex"
             ></rank-list>
             <song-collections v-else-if="item === '歌单'"
-                              :type="'songList'"
+                              :type="'playlist'"
                               :isCurrent="index === selectedIndex"
             ></song-collections>
             <musician-list v-else-if="item === '歌手'"

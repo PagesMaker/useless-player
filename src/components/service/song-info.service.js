@@ -21,7 +21,9 @@ class SongInfoService {
   songListEdit(param) {
     return HTTPClient.get(`/playlist/tracks?op=${param.op}&pid=${param.pid}${param.tracks ? `&tracks=${param.tracks}` : ''}`, {withTimeStamp: true});
   }
-
+  /*getFavoriteList(id) {
+    return HTTPClient.get(`/likelist?uid=${id}`, {withTimeStamp: true});
+  }*/
   getAlbum(id) {
     return HTTPClient.get(`/album?id=${id}`, {withTimeStamp: true});
   }
