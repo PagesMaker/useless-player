@@ -4,7 +4,7 @@
         <div class="list-name">
           我喜欢
         </div>
-        <div class="btn-area">
+        <div class="btn-area" v-if="showBtn">
           <a-button @click="getListDetail(false, true)">
             <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
             <span>播放全部</span>
@@ -23,13 +23,15 @@
       </div>
       <div class="music-list-body">
         <table-in-list
-          :currentListPlaying="crtListInfoIdx === playingListIdx"
+          :from="'my-favorite'"
+          :favoriteListInfo="favoriteListInfo"
           :availableTabs="['song', 'album', 'video', 'playlist']"
           :crtListInfo="crtListInfo"
           :search-mode="false"
           :songs="songs"
           :currentSongIdx="currentSongIdx"
           :columns="columns"
+          @handleTabChange="handleTabChange($event)"
           @hoverInRow="rowHover($event)"
           @changeCurrentSongIdx="getSongsDetail($event)"
           :isPlaySearchSong="false"
@@ -73,6 +75,8 @@
         albums: [],
         video: [],
         listInfo: {},
+        showBtn: true,
+        favoriteListInfo: [],
         currentSongIdx: 0
       }
     },
@@ -88,6 +92,10 @@
         }
         if (res.type === SYSTEM_EVENTS.GET_SONG_URL) {
           this.getSongUrl();
+        }
+        if (res.type === SYSTEM_EVENTS.RETURN_FAVORITE_LIST) {
+          this.favoriteListInfo = res.data;
+          console.log(this.favoriteListInfo);
         }
         if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
           if (res.data.type === 'next') {
@@ -135,6 +143,12 @@
             fromCache: true
           }
         });
+        bully.setMessage({
+          type: SYSTEM_EVENTS.GET_FAVORITE_LIST
+        });
+      },
+      handleTabChange(e) {
+        this.showBtn = +e === 1;
       },
       rowHover(e) {
         this.songs[e.idx].rowName.hover = e.hover;
@@ -200,6 +214,13 @@
           bully.setMessage({
             type: SYSTEM_EVENTS.PLAY_MUSIC,
             data: data
+          });
+          bully.setMessage({
+            type: SYSTEM_EVENTS.SET_PLAYING_LIST,
+            data: {
+              type: 'my-favorite',
+              data: this.songs
+            }
           });
         }, () => {
           this.$message.error('获取歌曲详情失败')

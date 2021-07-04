@@ -24,7 +24,7 @@
               <span>{{(crtListInfo && crtListInfo.description) || '精心完善歌单信息有机会获得推荐，让更多用户看到你的大作'}}</span>
             </div>
             <div class="btn-area">
-              <a-button @click="getListDetail(false, true)">
+              <a-button @click="getListDetail(false, false, true)">
                 <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
@@ -57,7 +57,7 @@
               <span>{{(crtListInfo && crtListInfo.description) || '精心完善歌单信息有机会获得推荐，让更多用户看到你的大作'}}</span>
             </div>
             <div class="btn-area">
-              <a-button @click="getListDetail(false, true)">
+              <a-button @click="getListDetail(false, false, true)">
                 <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
@@ -82,7 +82,7 @@
               <span>更新时间：{{crtListInfo.updateTime | dateFormat('yyyy-MM-DD')}}</span>
             </div>
             <div class="btn-area">
-              <a-button @click="getListDetail(false, true)">
+              <a-button @click="getListDetail(false, false, true)">
                 <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
                 <span>播放全部</span>
               </a-button>
@@ -101,6 +101,7 @@
         </div>
         <div class="music-list-body">
           <table-in-list
+            :from="searchMode ? 'search-data' : 'list-component'"
             :currentListPlaying="crtListInfoIdx === playingListIdx"
             :crtListInfo="crtListInfo"
             :availableTabs="['song', 'recentCollected', 'comment']"
@@ -109,7 +110,7 @@
             :currentSongIdx="currentSongIdx"
             :columns="searchMode ? searchListingColumns : columns"
             @hoverInRow="rowHover($event)"
-            @changeCurrentSongIdx="getSongsDetail($event)"
+            @changeCurrentSongIdx="getSongsDetail(false, $event)"
             :isPlaySearchSong="isPlaySearchSong"
             @handleTableChange="handleTableChange($event)"
             @scrollToBottom="getMoreSearchResult()"
@@ -145,6 +146,7 @@
           searchText$: new Subject(),
           crtListInfo: {},
           playingListIdx: 0,
+          playingList: {},
           crtHeaderType: 'playlists',
           crtListInfoIdx: 0,
           songs: [],
@@ -255,31 +257,31 @@
             }
           }
           if (res.type === SYSTEM_EVENTS.GET_SONG_URL) {
-            this.getSongUrl();
+            this.getSongUrl(false);
           }
           if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
             if (res.data.type === 'next') {
-              if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
+              if (this.currentSongIdx + 1 >= this.playingList.data.length) {
                 this.$message.warning('已经是最后一首了');
                 return;
               }
               if (res.data.switchSong) {
                 this.currentSongIdx++;
               }
-              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
+              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail(true) : this.getListDetail(true);
             } else if (res.data.type === 'prev') {
               if (this.currentSongIdx - 1 < 0) {
                 this.$message.warning('已经是第一首了');
                 return;
               }
               this.currentSongIdx--;
-              this.searchMode && this.isPlaySearchSong? this.getSongsDetail() : this.getListDetail();
+              this.searchMode && this.isPlaySearchSong? this.getSongsDetail(true) : this.getListDetail(true);
             } else if (res.data.type === 'current') {
-              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
+              this.searchMode && this.isPlaySearchSong ? this.getSongsDetail(true) : this.getListDetail(true);
             } else if (res.data.type === 'list loop') {
-              if (this.currentSongIdx + 1 >= (this.searchMode ? this.currentSearchData.length : this.songs.length)) {
+              if (this.currentSongIdx + 1 >=  this.playingList.data.length) {
                 this.currentSongIdx = 0;
-                this.searchMode && this.isPlaySearchSong ? this.getSongsDetail() : this.getListDetail();
+                this.searchMode && this.isPlaySearchSong ? this.getSongsDetail(true) : this.getListDetail(true);
               }
             }
           }
@@ -293,6 +295,7 @@
             this.showHeader = false;
             this.hasMore = res.data.data.hasMore;
             if (res.data.type === 'album') {
+              // todo
             } else {
             }
           }
@@ -417,10 +420,10 @@
         rowHover(e) {
           !this.searchMode ? (this.songs[e.idx].rowName.hover = e.hover) : (this.currentSearchData[e.idx].rowName.hover = e.hover);
         },
-        getSongsDetail(data = this.currentSearchData[this.currentSongIdx]) {
+        getSongsDetail(autoSwitch = false, data = this.currentSearchData[this.currentSongIdx]) {
           if (!this.searchMode) {
-            this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
-            this.getSongUrl();
+            !autoSwitch && (this.currentSongIdx = this.songs.findIndex(item => item.id === data.id));
+            this.getSongUrl(autoSwitch);
             return;
           }
           songInfoService.getAlbum(data.album.id).subscribe(res => {
@@ -428,7 +431,7 @@
               data.al = res.album;
               data.ar = data.artists;
               data.dt = data.duration;
-              this.currentSongIdx = this.currentSearchData.findIndex(item => item.id === data.id);
+              !autoSwitch && (this.currentSongIdx = this.currentSearchData.findIndex(item => item.id === data.id));
               console.log(this.currentSongIdx);
               songInfoService.getSongUrl(data.id).subscribe(res => {
                 console.log(res);
@@ -437,15 +440,29 @@
                   type: SYSTEM_EVENTS.PLAY_MUSIC,
                   data
                 });
+                if (!this.playingList.data || ( this.playingList.type !== 'search-data' && !autoSwitch)) {
+                  this.playingList = {
+                    type: 'search-data',
+                    data: JSON.parse(JSON.stringify(this.currentSearchData))
+                  };
+                  bully.setMessage({
+                    type: SYSTEM_EVENTS.SET_PLAYING_LIST,
+                    data: this.playingList
+                  });
+                }
                 this.playingListIdx = this.crtListInfoIdx;
                 this.isPlaySearchSong = true;
               });
             }
           });
         },
-        getListDetail(switchList = false, playSong = false, param) {
+        getListDetail(autoSwitch, switchList = false, playSong = false, param) {
+          if (this.playingList.data && autoSwitch) {
+            this.getSongUrl(autoSwitch);
+            return;
+          }
           if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
-             this.getSongUrl();
+             this.getSongUrl(false);
           } else {
             songInfoService.getPlaylistDetail(this.crtListInfo.id).subscribe(res => {
               if (res.code === 200) {
@@ -465,7 +482,7 @@
                   this.songs = res.playlist.tracks.map(item => {item.hidden = false; return item});
                 }
                 if (!switchList || playSong) {
-                  this.getSongUrl();
+                  this.getSongUrl(false);
                 }
               }
             }, () => {
@@ -488,35 +505,43 @@
         handleTableChange(e) {
           console.log(e);
           // 暂时将该函数认为是sort的回调，因为翻页和筛选功能暂时不会去做
-          this.getListDetail(true, false, e);
+          this.getListDetail(false, true, false, e);
         },
-        getSongUrl() {
-          if (!this.songs.length) {
-            return;
-          }
-          songInfoService.getSongUrl(this.songs[this.currentSongIdx].id).subscribe(res => {
-            this.playingListIdx = this.crtListInfoIdx;
-            const data = {...this.songs[this.currentSongIdx], ...res.data[0], crtListId: this.crtListInfo.id};
-            bully.setMessage({
-              type: SYSTEM_EVENTS.PLAY_MUSIC,
-              data: data
+        getSongUrl(autoSwitch) {
+          const songs = autoSwitch ? this.playingList.data : this.songs;
+            songInfoService.getSongUrl(songs[this.currentSongIdx].id).subscribe(res => {
+              this.playingListIdx = this.crtListInfoIdx;
+              const data = {...songs[this.currentSongIdx], ...res.data[0], crtListId: this.crtListInfo.id};
+              bully.setMessage({
+                type: SYSTEM_EVENTS.PLAY_MUSIC,
+                data: data
+              });
+              if (!this.playingList.data || (this.crtListInfo.id !== this.playingList.id && !autoSwitch) ) {
+                this.playingList = {
+                  type: 'list-component',
+                  data:  JSON.parse(JSON.stringify(this.songs)),
+                  id: this.crtListInfo.id
+                };
+                bully.setMessage({
+                  type: SYSTEM_EVENTS.SET_PLAYING_LIST,
+                  data: this.playingList
+                });
+              }
+              this.isPlaySearchSong = false;
+            }, () => {
+              this.$message.error('获取歌曲详情失败')
             });
-            this.isPlaySearchSong = false;
-          }, () => {
-            this.$message.error('获取歌曲详情失败')
-          });
         },
         setCrtList(i, playSong = false) {
           if (this.searchMode) {
             this.showHeader = true;
             this.searchMode = false;
-            this.currentSongIdx = 0;
             this.crtHeaderType  = 'playlists';
           }
           if (this.listInfo[i]) {
             this.crtListInfo = this.listInfo[i];
             this.crtListInfoIdx = i;
-            this.getListDetail(true, playSong);
+            this.getListDetail(false, true, playSong);
           } else {
             this.initCrtListInfo();
           }

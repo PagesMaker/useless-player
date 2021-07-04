@@ -23,7 +23,7 @@
       </div>
       <div class="music-list-body">
         <table-in-list
-          :currentListPlaying="crtListInfoIdx === playingListIdx"
+          :from="'audition-list'"
           :availableTabs="['song', 'album', 'video', 'playlist']"
           :crtListInfo="crtListInfo"
           :search-mode="false"
@@ -214,6 +214,13 @@
           bully.setMessage({
             type: SYSTEM_EVENTS.PLAY_MUSIC,
             data: data
+          });
+          bully.setMessage({
+            type: SYSTEM_EVENTS.SET_PLAYING_LIST,
+            data: {
+              type: 'audition-list',
+              data: this.songs
+            }
           });
         }, () => {
           this.$message.error('获取歌曲详情失败')

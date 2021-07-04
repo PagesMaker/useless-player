@@ -1,7 +1,7 @@
 <template>
   <div class="box-conetent" @click="playlistsHandle(type)">
     <div class="list-bg-wrapper"  @mouseenter="selectedIndexHandle(index)"  @mouseleave="selectedIndexHandle(-1)">
-      <div class="list-bg" :style="{backgroundImage: item.picUrl ? 'url(' + item.picUrl + '?param=250y250'  + ')'  : 'unset'}">
+      <div class="list-bg" :style="{backgroundImage: (item.picUrl || item.coverImgUrl) ? 'url(' + (item.picUrl || item.coverImgUrl) + '?param=250y250'  + ')'  : 'unset'}">
         <div class="listen-times" v-if="showPlayCount">
           <a-icon type="customer-service" />
           <span>{{item.playCount | tenThousands(1)}}</span>
@@ -11,9 +11,12 @@
         </div>
       </div>
     </div>
-    <div class="list-link">
-      <span>{{item.name}}</span>
-      <span v-if="showSingerName">{{item.artist.name}}</span>
+    <div class="list-link-content">
+      <div class="list-link">
+        <span>{{item.name}}</span>
+        <span v-if="showSingerName">{{item.artist.name}}</span>
+      </div>
+      <a-icon type="delete" v-if="showDeleteIcon" @click="removeListFromFavorite(item, index)"></a-icon>
     </div>
   </div>
 </template>
@@ -25,8 +28,9 @@
         return {
         }
       },
-      props: ['item', 'index', 'selectedIndex', 'type', 'showPlayCount', 'showSingerName'],
+      props: ['item', 'index', 'selectedIndex', 'type', 'showPlayCount', 'showSingerName', 'showDeleteIcon'],
       mounted() {
+        console.log(this.item.coverImgUrl)
       },
       methods: {
         playlistsHandle(type) {
@@ -34,7 +38,10 @@
         },
         selectedIndexHandle(index) {
           this.$emit('selectedIndexHandle', index)
-        }
+        },
+        removeListFromFavorite(item, index) {
+
+        },
       }
     }
 </script>
@@ -91,8 +98,11 @@
     animation: showMask 0.25s linear normal;
     animation-fill-mode: forwards;
   }
-  .list-link{
+  .list-link-content{
     margin-top: 10px;
+    @include flex(row, space-between, flex-start);
+  }
+  .list-link{
     @include flex(column, space-between, flex-start);
   }
   .list-link span:hover{

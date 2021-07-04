@@ -17,7 +17,9 @@ class SongInfoService {
   getPlaylistDetail(id) {
     return HTTPClient.get(`/playlist/detail?id=${id}`, {withTimeStamp: true});
   }
-
+  getSubList(param) {
+    return HTTPClient.get(`/topic/sublist?limit=${param.limit}&offset=${param.offset}`, {withTimeStamp: true});
+  }
   songListEdit(param) {
     return HTTPClient.get(`/playlist/tracks?op=${param.op}&pid=${param.pid}${param.tracks ? `&tracks=${param.tracks}` : ''}`, {withTimeStamp: true});
   }

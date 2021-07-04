@@ -137,6 +137,7 @@
         startTime: 0,
         subscription: [],
         placement: 'topCenter',
+        playingList: [],
         player: {},
         songInfo: {
           url: '',
@@ -169,7 +170,7 @@
       switchMusic(e) {
         bully.setMessage({
           type: SYSTEM_EVENTS.SWITCH_SONG,
-          data: {type: e, switchSong: true}
+          data: {type: e, switchSong: true, autoSwitch: false}
         })
       },
       autoSwitchMusic(switchSong = true) {
@@ -189,7 +190,7 @@
         }
         bully.setMessage({
           type: SYSTEM_EVENTS.SWITCH_SONG,
-          data: {type, switchSong}
+          data: {type, switchSong, autoSwitch: true}
         })
       },
       handleDownload() {
@@ -311,11 +312,16 @@
       this.player = this.$refs.mainPlayer;
       const sub0 = this.updateTime$.asObservable().pipe(throttleTime(800)).subscribe(() => {
         if (!this.isPaused) {
-          console.log(this.player.currentTime);
           this.currentTime = +this.player.currentTime.toFixed(0);
         }
       })
       const sub = bully.getMessage().subscribe(res => {
+        if (res.type === SYSTEM_EVENTS.QUERY_CURRENT_PLAYING_LIST) {
+          bully.setMessage({
+            type: SYSTEM_EVENTS.RETURN_PLAYING_LIST,
+            data: this.playingList
+          });
+        }
         if (res.type === SYSTEM_EVENTS.PLAY_MUSIC) {
           try {
             if (!this.player.paused) {
@@ -359,6 +365,14 @@
           } catch (e) {
             console.log(e);
           }
+        }
+        if (res.type === SYSTEM_EVENTS.SET_PLAYING_LIST) {
+          console.log(res.data);
+          this.playingList = res.data;
+          bully.setMessage({
+            type: SYSTEM_EVENTS.RETURN_PLAYING_LIST,
+            data: this.playingList
+          });
         }
         if (res.type === SYSTEM_EVENTS.SWITCH_AFTER_REMOVE_SONG) {
           console.log(res.data);
@@ -452,6 +466,7 @@
       .song-info {
         @include flex(row, flex-start, center);
         .song-name-area {
+          width: 80%;
           margin: 0 10px;
 
           /deep/ .anticon:not(:first-child) {
@@ -459,6 +474,7 @@
           }
 
           .song-name-content {
+            white-space: nowrap;
             .song-name {
               color: black;
               font-size: 1.2em;

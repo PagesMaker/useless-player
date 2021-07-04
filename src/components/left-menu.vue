@@ -77,6 +77,7 @@
         addingNewList: false,
         openKeys: ['sub1', 'sub2', 'sub3'],
         songLists: [],
+        favoriteLists: [],
         subscription: [],
         selectedKeys: [0],
         startKeyIdx: 6,
@@ -112,6 +113,12 @@
             this.uid = res.data.data.id;
             this.getList(SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND);
           }
+        }
+        if (res.type === SYSTEM_EVENTS.GET_FAVORITE_LIST) {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.RETURN_FAVORITE_LIST,
+              data: this.favoriteLists
+            })
         }
         if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
           this.uid = res.data.id;
@@ -269,7 +276,8 @@
         songInfoService.getUserPlaylist(this.uid).subscribe(res => {
           console.log(res);
           if (res.code === 200) {
-            this.songLists = res.playlist;
+            this.songLists = res.playlist && res.playlist.filter(item => !item.subscribed);
+            this.favoriteLists = res.playlist && res.playlist.filter(item => item.subscribed);
             console.log(this.songLists);
             if (type !== SYSTEM_EVENTS.SONG_LIST_REFRESH && location.href.includes('list-view')) {
               this.selectedKeys = [this.startKeyIdx];
