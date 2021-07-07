@@ -25,6 +25,7 @@
         <table-in-list
           :from="'my-favorite'"
           :favoriteListInfo="favoriteListInfo"
+          :favoriteAlbum="favoriteAlbum"
           :availableTabs="['song', 'album', 'video', 'playlist']"
           :crtListInfo="crtListInfo"
           :search-mode="false"
@@ -77,6 +78,7 @@
         listInfo: {},
         showBtn: true,
         favoriteListInfo: [],
+        favoriteAlbum: [],
         currentSongIdx: 0
       }
     },
@@ -96,6 +98,7 @@
         if (res.type === SYSTEM_EVENTS.RETURN_FAVORITE_LIST) {
           this.favoriteListInfo = res.data;
           console.log(this.favoriteListInfo);
+          this.getFavoriteAlbum();
         }
         if (res.type === SYSTEM_EVENTS.SWITCH_SONG) {
           if (res.data.type === 'next') {
@@ -136,6 +139,18 @@
       this.subscription = null;
     },
     methods: {
+      getFavoriteAlbum() {
+        songInfoService.getFavoriteAlbum().subscribe(res => {
+          if (res && res.code === 200) {
+            console.log(res);
+            this.favoriteAlbum = res.data;
+          } else {
+            this.$message.error('获取收藏的专辑失败');
+          }
+        }, error => {
+          this.$message.error('获取收藏的专辑失败');
+        });
+      },
       getListInfo() {
         bully.setMessage({
           type: SYSTEM_EVENTS.GET_SONG_LIST,

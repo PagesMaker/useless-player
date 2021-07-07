@@ -16,7 +16,7 @@
         <span>{{item.name}}</span>
         <span v-if="showSingerName">{{item.artist.name}}</span>
       </div>
-      <a-icon type="delete" v-if="showDeleteIcon" @click="removeListFromFavorite(item, index)"></a-icon>
+      <a-icon type="delete" v-if="showDeleteIcon" @click.stop="removeListFromFavorite(item, index)"></a-icon>
     </div>
   </div>
 </template>
@@ -40,7 +40,7 @@
           this.$emit('selectedIndexHandle', index)
         },
         removeListFromFavorite(item, index) {
-
+          this.$emit('removeListFromFavorite', index);
         },
       }
     }

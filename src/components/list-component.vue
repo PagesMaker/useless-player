@@ -298,6 +298,10 @@
               // todo
             } else {
             }
+            bully.setMessage({
+              type: SYSTEM_EVENTS.PAGE_LOADING,
+              data: false
+            });
           }
           if (res.type === SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE) {
             console.log(res.data);

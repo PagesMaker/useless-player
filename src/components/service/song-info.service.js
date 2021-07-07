@@ -40,5 +40,8 @@ class SongInfoService {
   removeSongList(id) {
     return HTTPClient.get(`/playlist/delete?id=${id}`, {withTimeStamp: true});
   }
+  getFavoriteAlbum() {
+    return HTTPClient.get(`/album/sublist`, {withTimeStamp: true});
+  }
 }
 export const songInfoService = new SongInfoService();

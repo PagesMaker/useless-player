@@ -21,7 +21,8 @@ export const SYSTEM_EVENTS = {
   SET_PLAYING_LIST: 'set-playing-list',
   RETURN_FAVORITE_LIST: 'return-favorite-list',
   QUERY_CURRENT_PLAYING_LIST: 'query-current-playing-list',
-  RETURN_PLAYING_LIST: 'return-playing-list'
+  RETURN_PLAYING_LIST: 'return-playing-list',
+  PAGE_LOADING: 'page-loading'
 }
 export const APP = {
   MIN_WIDTH: 1080,

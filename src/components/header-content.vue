@@ -268,13 +268,19 @@
                       hover: false
                     }
                   });
-                  bully.setRMessage({
-                    type: SYSTEM_EVENTS.SEARCH_KEYWORDS,
-                    data: {
-                      type: key,
-                      data: res.result
-                    }
+                  bully.setMessage({
+                    type: SYSTEM_EVENTS.PAGE_LOADING,
+                    data: true
                   });
+                  setTimeout(() => {
+                    bully.setRMessage({
+                      type: SYSTEM_EVENTS.SEARCH_KEYWORDS,
+                      data: {
+                        type: key,
+                        data: res.result
+                      }
+                    });
+                  }, 500);
                   this.$router.push({name : 'list-view'});
                 }
               }

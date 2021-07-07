@@ -47,13 +47,29 @@
               :showDeleteIcon="true"
               :selectedIndex="selectedIndex.neteaseListInfo"
               @playlistsHandle="playlistsHandle(item, $event)"
+              @removeListFromFavorite="removeListFromFavorite(item, $event)"
               @selectedIndexHandle="selectedIndex.neteaseListInfo = $event"
             ></songs-item>
           </div>
         </div>
       </a-tab-pane>
       <a-tab-pane key="5" tab="专辑" v-if="availableTabs.includes('album')">
-
+        <div class="favorite-list-box">
+          <div class="box-wrapper" v-for="(item, index) in favoriteAlbum" >
+            <songs-item
+              :item="item"
+              :index="index"
+              :type="'playlists'"
+              :showSingerName="false"
+              :showPlayCount="false"
+              :showDeleteIcon="true"
+              :selectedIndex="selectedIndex.neteaseListInfo"
+              @playlistsHandle="playlistsHandle(item, $event)"
+              @removeListFromFavorite="removeListFromFavorite(item, $event)"
+              @selectedIndexHandle="selectedIndex.neteaseListInfo = $event"
+            ></songs-item>
+          </div>
+        </div>
       </a-tab-pane>
       <a-tab-pane key="6" tab="视频" v-if="availableTabs.includes('video')">
 
@@ -103,6 +119,7 @@
     import {SYSTEM_EVENTS} from "../Const";
     import iconGroup from "./icon-group";
     import songsItem from "./songs-item";
+    import {UserInfos} from "./service/user-info.service";
     export default {
       name: "table-in-list",
       components: {
@@ -127,6 +144,11 @@
           if (res.type === SYSTEM_EVENTS.RETURN_PLAYING_LIST) {
             this.currentSongList = res.data;
             console.log(res.data, '///////////');
+          }
+          if (res.type === SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND) {
+            bully.setMessage({
+              type: SYSTEM_EVENTS.GET_FAVORITE_LIST
+            });
           }
         });
         bully.setMessage({
@@ -173,6 +195,26 @@
         },
         handleTableChange(pagination, filters, sorter) {
           this.$emit('handleTableChange', {pagination, filters, sorter});
+        },
+        removeListFromFavorite(item, index) {
+          console.log(item);
+          songInfoService.removeSongList(
+            [item.id]
+          ).subscribe(res => {
+            if (res.code === 200) {
+              bully.setMessage({
+                type: SYSTEM_EVENTS.GET_SONG_LIST,
+                data: {
+                  fromCache: false,
+                  data: UserInfos.userInfo
+                }
+              });
+            } else {
+              this.$message.error('删除失败');
+            }
+          }, () =>  {
+            this.$message.error('删除失败');
+          });
         },
         initShowTabs() {
         },
@@ -266,7 +308,7 @@
           })
         }
       },
-      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying', 'crtListInfo', 'availableTabs', 'favoriteListInfo', 'from'],
+      props: ['songs', 'currentSongIdx', 'columns', 'searchMode', 'isPlaySearchSong', 'currentListPlaying', 'crtListInfo', 'availableTabs', 'favoriteListInfo', 'from', 'favoriteAlbum'],
       watch: {
         searchMode: {
           handler(e) {
