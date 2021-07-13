@@ -512,6 +512,7 @@
           this.getListDetail(false, true, false, e);
         },
         getSongUrl(autoSwitch) {
+          console.log(this.songs);
           const songs = autoSwitch ? this.playingList.data : this.songs;
             songInfoService.getSongUrl(songs[this.currentSongIdx].id).subscribe(res => {
               this.playingListIdx = this.crtListInfoIdx;

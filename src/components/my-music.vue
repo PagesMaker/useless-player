@@ -43,39 +43,17 @@
         playingListIdx: 0,
         mode: '',
         crtHeaderType: 'playlists',
-        crtListInfoIdx: 0,
-        columns: [
-          {
-            title: '歌曲',
-            dataIndex: 'rowName',
-            fixed: 'left',
-            width: '40%',
-            scopedSlots: { customRender: 'name' },
-            sorter: true,
-            sortDirections: ['descend', 'ascend']
-          },
-          {
-            title: '歌手',
-            dataIndex: 'ar',
-            fixed: 'left',
-            width: '28%',
-            scopedSlots: { customRender: 'singer' },
-            sorter: true,
-            sortDirections: ['descend', 'ascend']
-          },
-          {
-            title: '专辑',
-            dataIndex: 'al',
-            fixed: 'left',
-            width: '30%',
-            scopedSlots: { customRender: 'album' },
-            sorter: true,
-            sortDirections: ['descend', 'ascend']
-          }
-        ]
+        crtListInfoIdx: 0
       }
     },
     mounted() {
+      if (location.href.includes('played-music-list')) {
+        this.mode = 'playedMusicList';
+      } else if (location.href.includes('my-favorite')) {
+        this.mode = 'myFavorite';
+      } else if (location.href.includes('audition-list')) {
+        this.mode = 'auditionList';
+      }
       const subR = bully.getRMessage().subscribe(res => {
         if (res.type === SYSTEM_EVENTS.SWITCH_ROUTER) {
           this.mode = res.data;
@@ -93,6 +71,39 @@
       this.subscription = null;
     },
     methods:{
+    },
+    computed: {
+      columns() {
+        return [
+          {
+            title: '歌曲',
+            dataIndex: 'rowName',
+            fixed: 'left',
+            width: '40%',
+            scopedSlots: { customRender: 'name' },
+            sorter: this.mode !== 'playedMusicList',
+            sortDirections: ['descend', 'ascend']
+          },
+          {
+            title: '歌手',
+            dataIndex: 'ar',
+            fixed: 'left',
+            width: '28%',
+            scopedSlots: { customRender: 'singer' },
+            sorter: this.mode !== 'playedMusicList',
+            sortDirections: ['descend', 'ascend']
+          },
+          {
+            title: '专辑',
+            dataIndex: 'al',
+            fixed: 'left',
+            width: '30%',
+            scopedSlots: { customRender: 'album' },
+            sorter: this.mode !== 'playedMusicList',
+            sortDirections: ['descend', 'ascend']
+          }
+        ];
+      }
     }
   }
 </script>

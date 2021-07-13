@@ -5,7 +5,7 @@
           最近播放
         </div>
         <div class="btn-area">
-          <a-button @click="getListDetail(false, true)">
+          <a-button @click="getListDetail(true)">
             <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
             <span>播放全部</span>
           </a-button>
@@ -33,8 +33,6 @@
           @hoverInRow="rowHover($event)"
           @changeCurrentSongIdx="getSongsDetail($event)"
           :isPlaySearchSong="false"
-          @handleTableChange="handleTableChange($event)"
-          @scrollToBottom="getMoreSearchResult()"
         ></table-in-list>
       </div>
     </div>
@@ -79,36 +77,8 @@
       const s = this.searchText$.asObservable().pipe(debounceTime(400)).subscribe(() => {
         this.getSearchResultFromList();
       });
-      /*if (UserInfos.userInfo.id) {
-        console.log(UserInfos);
-        this.userInfo = UserInfos.userInfo;
-        this.getListInfo(UserInfos.userInfo);
-      }*/
+      this.getHistoricalMusicList();
       const sub = bully.getMessage().subscribe(res => {
-        // if (res.type === SYSTEM_EVENTS.GET_USER_ID) {
-        //   this.getListInfo(res.data);
-        //   this.userInfo = UserInfos.userInfo;
-        // }
-        if (res.type === SYSTEM_EVENTS.CHANGE_SONG_LIST) {
-          this.setCrtList(res.data.idx, res.data.playSong);
-        }
-        if (res.type === SYSTEM_EVENTS.GOT_SONG_LIST_FROM_BACKEND) {
-          this.listInfo = res.data;
-          this.setCrtList(0);
-        }
-        if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH) {
-          this.listInfo = res.data;
-          this.setCrtList(this.crtListInfoIdx);
-          if (res.exData) {
-            bully.setMessage({
-              type: SYSTEM_EVENTS.SWITCH_AFTER_REMOVE_SONG,
-              data: res.exData
-            })
-          }
-        }
-        if (res.type === SYSTEM_EVENTS.SONG_LIST_REFRESH_BY_GET_LIST) {
-          this.favoriteListData.songs = res.data[0];
-        }
         if (res.type === SYSTEM_EVENTS.GET_SONG_URL) {
           this.getSongUrl();
         }
@@ -150,6 +120,26 @@
       this.subscription = null;
     },
     methods: {
+      getHistoricalMusicList() {
+        songInfoService.getHistoricalMusicList(UserInfos.userInfo.id).subscribe(res => {
+          console.log(res);
+          if (res && res.code === 200 && res.allData instanceof Array) {
+            this.songs = res.allData.map(item => {
+              item.song.score = item.score;
+              item.song.playCount = item.playCount;
+              item.song.rowName = {
+                name: item.song.name,
+                hover: false
+              }
+              return item.song;
+            });
+          } else {
+            this.$message.error('查询历史记录失败');
+          }
+        }, err => {
+          this.$message.error('查询历史记录失败');
+        });
+      },
       rowHover(e) {
         this.songs[e.idx].rowName.hover = e.hover;
       },
@@ -157,34 +147,9 @@
         this.currentSongIdx = this.songs.findIndex(item => item.id === data.id);
         this.getSongUrl();
       },
-      getListDetail(switchList = false, playSong = false, param) {
-        if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url && !switchList) {
+      getListDetail() {
+        if (this.songs && this.songs[this.currentSongIdx] && this.songs[this.currentSongIdx].url) {
           this.getSongUrl();
-        } else {
-          songInfoService.getPlaylistDetail(this.crtListInfo.id).subscribe(res => {
-            if (res.code === 200) {
-              res.playlist.tracks.forEach(item => {
-                item.rowName = {
-                  name: item.name,
-                  hover: false
-                }
-              });
-              if (param && param.sorter.order === 'ascend') {
-                const field = param.sorter.field;
-                this.songs = res.playlist.tracks.sort((a ,b) => this.compare(a[field].name || a[field][0].name, b[field].name || b[field][0].name) ? 1 : -1).map(item => {item.hidden = false; return item});
-              } else if (param && param.sorter.order === 'descend') {
-                const field = param.sorter.field;
-                this.songs = res.playlist.tracks.sort((a ,b) => this.compare(a[field].name || a[field][0].name, b[field].name || b[field][0].name) ? -1 : 1).map(item => {item.hidden = false; return item});
-              } else {
-                this.songs = res.playlist.tracks.map(item => {item.hidden = false; return item});
-              }
-              if (!switchList || playSong) {
-                this.getSongUrl();
-              }
-            }
-          }, () => {
-            this.$message.error('获取歌单详情失败')
-          });
         }
       },
       compare(a, b) {
@@ -195,14 +160,6 @@
           b = PY.getWordsCode(b);
         }
         return a > b;
-      },
-      getMoreSearchResult() {
-
-      },
-      handleTableChange(e) {
-        console.log(e);
-        // 暂时将该函数认为是sort的回调，因为翻页和筛选功能暂时不会去做
-        this.getListDetail(true, false, e);
       },
       getSongUrl() {
         if (!this.songs.length) {
@@ -225,15 +182,6 @@
         }, () => {
           this.$message.error('获取歌曲详情失败')
         });
-      },
-      setCrtList(i, playSong = false) {
-        if (this.listInfo[i]) {
-          this.crtListInfo = this.listInfo[i];
-          this.crtListInfoIdx = i;
-          this.getListDetail(true, playSong);
-        } else {
-          this.initCrtListInfo();
-        }
       },
       initCrtListInfo() {
         this.crtListInfo = {

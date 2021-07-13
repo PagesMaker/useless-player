@@ -10,6 +10,7 @@ class SongInfoService {
   getSongUrl(id) {
     return HTTPClient.get(`/song/url?id=${id}`, {withTimeStamp: true});
   }
+
   getSongDetail(ids) {
     // ids 可以是歌曲id组成的数组，也可以是单个id
     return HTTPClient.get(`/song/detail?ids=${ids}`, {withTimeStamp: true});
@@ -42,6 +43,16 @@ class SongInfoService {
   }
   getFavoriteAlbum() {
     return HTTPClient.get(`/album/sublist`, {withTimeStamp: true});
+  }
+
+  removeAlbum(id) {
+    return HTTPClient.get(`/album/sub?t=0&id=${id}`, {withTimeStamp: true});
+  }
+  addAlbum(id) {
+    return HTTPClient.get(`/album/sub?t=1&id=${id}`, {withTimeStamp: true});
+  }
+  getHistoricalMusicList(id) {
+    return HTTPClient.get(`/user/record?uid=${id}&type=0`, {withTimeStamp: true});
   }
 }
 export const songInfoService = new SongInfoService();

@@ -35,7 +35,7 @@
       <a-tab-pane key="3" tab="评论" v-if="availableTabs.includes('comment')">
 
       </a-tab-pane>
-      <a-tab-pane key="4" tab="歌单" v-if="availableTabs.includes('playlist')">
+      <a-tab-pane key="4" :tab="'歌单 ' + (favoriteListInfo ? favoriteListInfo.length : 0)" v-if="availableTabs.includes('playlist')">
         <div class="favorite-list-box">
           <div class="box-wrapper" v-for="(item, index) in favoriteListInfo" >
             <songs-item
@@ -53,7 +53,7 @@
           </div>
         </div>
       </a-tab-pane>
-      <a-tab-pane key="5" tab="专辑" v-if="availableTabs.includes('album')">
+      <a-tab-pane key="5" :tab="'专辑 ' + (favoriteAlbum ? favoriteAlbum.length : 0)" v-if="availableTabs.includes('album')">
         <div class="favorite-list-box">
           <div class="box-wrapper" v-for="(item, index) in favoriteAlbum" >
             <songs-item
@@ -65,7 +65,7 @@
               :showDeleteIcon="true"
               :selectedIndex="selectedIndex.neteaseListInfo"
               @playlistsHandle="playlistsHandle(item, $event)"
-              @removeListFromFavorite="removeListFromFavorite(item, $event)"
+              @removeListFromFavorite="removeAblumFromFavorite(item, $event)"
               @selectedIndexHandle="selectedIndex.neteaseListInfo = $event"
             ></songs-item>
           </div>
@@ -196,6 +196,25 @@
         handleTableChange(pagination, filters, sorter) {
           this.$emit('handleTableChange', {pagination, filters, sorter});
         },
+        removeAblumFromFavorite(item, index) {
+          songInfoService.removeAlbum(
+            item.id
+          ).subscribe(res => {
+            if (res.code === 200) {
+              bully.setMessage({
+                type: SYSTEM_EVENTS.GET_SONG_LIST,
+                data: {
+                  fromCache: false,
+                  data: UserInfos.userInfo
+                }
+              });
+            } else {
+              this.$message.error('删除失败');
+            }
+          }, () =>  {
+            this.$message.error('删除失败');
+          });
+        },
         removeListFromFavorite(item, index) {
           console.log(item);
           songInfoService.removeSongList(
@@ -223,6 +242,7 @@
           this.$emit('handleTabChange', e);
         },
         getTitle(data) {
+          console.log(this.songs);
           return data.map(item => item.name).join(' / ')
         },
         setRowBehaviour(data, idx) {
