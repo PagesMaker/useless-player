@@ -242,7 +242,6 @@
           this.$emit('handleTabChange', e);
         },
         getTitle(data) {
-          console.log(this.songs);
           return data.map(item => item.name).join(' / ')
         },
         setRowBehaviour(data, idx) {

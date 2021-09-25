@@ -24,7 +24,7 @@
       <div class="music-list-body">
         <table-in-list
           :from="'played-music-list'"
-          :availableTabs="['song', 'album', 'video', 'playlist']"
+          :availableTabs="['song']"
           :crtListInfo="crtListInfo"
           :search-mode="false"
           :songs="songs"

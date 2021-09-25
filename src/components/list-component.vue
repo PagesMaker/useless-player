@@ -53,8 +53,8 @@
             <div class="list-information">
               <span>发布时间：{{crtListInfo.publishTime | dateFormat('yyyy-MM-DD')}}</span><span style="margin-left: 2em">发行方：{{crtListInfo.company}}</span>
             </div>
-            <div class="user-infos-box">
-              <span>{{(crtListInfo && crtListInfo.description) || '精心完善歌单信息有机会获得推荐，让更多用户看到你的大作'}}</span>
+            <div class="user-infos-box" style="width: 80%">
+              <span>{{crtListInfo && crtListInfo.description}}</span>
             </div>
             <div class="btn-area">
               <a-button @click="getListDetail(false, false, true)">
@@ -80,6 +80,36 @@
             </div>
             <div class="list-information">
               <span>更新时间：{{crtListInfo.updateTime | dateFormat('yyyy-MM-DD')}}</span>
+            </div>
+            <div class="btn-area">
+              <a-button @click="getListDetail(false, false, true)">
+                <a-icon type="play-circle" title="播放" style="color: white" theme="outlined" />
+                <span>播放全部</span>
+              </a-button>
+              <a-button v-if="!searchInList" @click="toggleSearch(true)">
+                <a-icon type="search" title="搜索" />
+                <span>搜索</span>
+              </a-button>
+              <a-input v-model="searchText" class="search-in-list" v-else @change="searchSongInList()" @blur="getSearchResultFromList()" @keypress.enter="getSearchResultFromList()">
+                <a-icon slot="prefix" @click="toggleSearch(false)" type="close" />
+              </a-input>
+              <a-button v-if="isEditMode">
+                <span>退出批量操作</span>
+              </a-button>
+            </div>
+          </div>
+          <div v-else-if="crtHeaderType === 'singer'" class="list-infos-box">
+            <div class="list-name">
+              {{crtListInfo.name}}
+            </div>
+            <div class="list-information">
+              <span>粉丝数：{{crtListInfo.fansCount | tenThousands}}</span><span style="margin-left: 2em">职业：{{crtListInfo.artist.identifyTag ? crtListInfo.artist.identifyTag + '' : '音乐人'}}</span>
+            </div>
+            <div class="user-infos-box singer-info-box" :style="{
+              'max-height': !expandDesc ? '2em' : 'unset',
+              'overflow': !expandDesc ? 'hidden' : 'unset'
+            }">
+              <span>{{crtListInfo && crtListInfo.artist.briefDesc}}</span><a v-if="!expandDesc" @click="expend()">展开</a>
             </div>
             <div class="btn-area">
               <a-button @click="getListDetail(false, false, true)">
@@ -137,6 +167,7 @@
       },
       data () {
         return {
+          expandDesc: false,
           subscription: [],
           searchMode: false,
           showHeader: true,
@@ -222,6 +253,7 @@
         }
       },
     mounted() {
+        this.expandDesc = false;
         this.initCrtListInfo();
         const s = this.searchText$.asObservable().pipe(debounceTime(400)).subscribe(() => {
           this.getSearchResultFromList();
@@ -304,6 +336,7 @@
             });
           }
           if (res.type === SYSTEM_EVENTS.MULTI_PURPOSE_HANDLE) {
+            this.expandDesc = false;
             console.log(res.data);
            if (res.data && (res.data.targetId || res.data.id)) {
              switch (res.data.type) {
@@ -384,6 +417,32 @@
                  });
                  break;
                }
+               case 'singer' : {
+                 songInfoService.getSingerTopPlaylist(res.data.id).subscribe(response => {
+                   if (response.code === 200) {
+                     console.log(response);
+                     if (!response.songs) {
+                       return;
+                     }
+                     this.searchMode = true;
+                     this.showHeader = true;
+                     this.crtHeaderType  = res.data.type;
+                     this.currentSearchData = response.songs.map(item => (
+                       {...item, artists: item.ar, album: item.al, duration: item.dt, rowName: {
+                           name: item.name,
+                           hover: false
+                         }
+                       })
+                     );
+                     this.crtListInfo = res.data;
+                   } else {
+                     this.$message.error('获取歌单详情失败')
+                   }
+                 }, () => {
+                   this.$message.error('获取歌单详情失败')
+                 });
+                 break;
+               }
              }
            }
           }
@@ -399,6 +458,9 @@
         this.subscription = null;
       },
       methods: {
+        expend() {
+          this.expandDesc = true;
+        },
         getListInfo(data) {
           bully.setMessage({
             type: SYSTEM_EVENTS.GET_SONG_LIST,
@@ -632,6 +694,13 @@
         }
         >div {
           padding: 3px 0;
+        }
+        .singer-info-box{
+          width: 80%;
+          align-items: flex-start!important;
+          >a{
+            white-space: nowrap;
+          }
         }
         .user-infos-box{
           color: $black;

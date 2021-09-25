@@ -7,7 +7,7 @@
             <selection-musics v-if="item === '精选'"
                               :isCurrent="index === selectedIndex"
             ></selection-musics>
-           <!-- <rank-list v-else-if="item === '排行榜'"
+            <rank-list v-else-if="item === '排行榜'"
                        :isCurrent="index === selectedIndex"
             ></rank-list>
             <song-collections v-else-if="item === '歌单'"
@@ -17,7 +17,7 @@
             <musician-list v-else-if="item === '歌手'"
                            :isCurrent="index === selectedIndex"
             ></musician-list>
-            <song-collections v-else-if="item === '新碟上新'"
+           <!-- <song-collections v-else-if="item === '新碟上新'"
                               :isCurrent="index === selectedIndex"
                               :type="'album'"
             ></song-collections>-->
@@ -76,7 +76,9 @@
         .ant-tabs-content{
           width: $max;
           height: calc(100% - 46px - 16px);
-          overflow: auto;
+          >div{
+            overflow: auto;
+          }
         }
       }
     }

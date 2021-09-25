@@ -13,8 +13,9 @@
 
     <audition-list
       :columns="columns"
-      v-if="mode === 'auditionList'"
+      v-if="mode === 'auditionList' || false"
     >
+<!--      暂不支持-->
     </audition-list>
 
   </div>

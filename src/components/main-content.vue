@@ -29,7 +29,6 @@ export default {
     flex-direction: row;
     background: $white;
     .left-menu{
-      background: #E3E3E3;
       width: 12%;
       height: $max;
     }

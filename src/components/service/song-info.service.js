@@ -27,6 +27,12 @@ class SongInfoService {
   /*getFavoriteList(id) {
     return HTTPClient.get(`/likelist?uid=${id}`, {withTimeStamp: true});
   }*/
+  getSingerTopPlaylist(id) {
+    return HTTPClient.get(`/artist/top/song?id=${id}`, {withTimeStamp: true});
+  }
+  getSingerAllPlaylist(id) {
+    return HTTPClient.get(`/artist/top/song?id=${id}`, {withTimeStamp: true});
+  }
   getAlbum(id) {
     return HTTPClient.get(`/album?id=${id}`, {withTimeStamp: true});
   }

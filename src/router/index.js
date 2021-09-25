@@ -55,11 +55,11 @@ export default new Router({
                   name: 'played-music-list',
                   component: resolve => require(['../components/my-music'], resolve)
                 },
-                {
+               /* {
                   path: 'audition-list',
                   name: 'audition-list',
                   component: resolve => require(['../components/my-music'], resolve)
-                },
+                },*/
                 {
                   path: 'my-favorite',
                   name: 'my-favorite',

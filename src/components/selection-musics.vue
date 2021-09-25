@@ -60,6 +60,8 @@
                  :type="'playlists'"
                  :showSingerName="false"
                  :showPlayCount="true"
+                 :show-creator-name="false"
+                 :show-delete-icon="false"
                  :selectedIndex="selectedIndex.neteaseListInfo"
                  @playlistsHandle="playlistsHandle(item, $event)"
                  @selectedIndexHandle="selectedIndex.neteaseListInfo = $event"
@@ -98,6 +100,8 @@
                  :type="'albums'"
                  :showSingerName="true"
                  :showPlayCount="false"
+                 :show-creator-name="false"
+                 :show-delete-icon="false"
                  :selectedIndex="selectedIndex.albumInfo"
                  @playlistsHandle="playlistsHandle(item, $event)"
                  @selectedIndexHandle="selectedIndex.albumInfo = $event"
@@ -343,7 +347,7 @@
     }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
   .selection-music-content{
     width: $max;
     height: $max;
@@ -471,8 +475,12 @@
           margin-right:0
         }
         .list-bg-wrapper{
-          width: 1.2rem;
           height: 1.2rem;
+          width: 1.2rem;
+          .list-bg{
+            height: 1.2rem;
+            width: 1.2rem;
+          }
         }
         .list-bg{
           background-repeat: round;

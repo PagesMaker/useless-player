@@ -32,7 +32,8 @@
         <a-menu-item :key="4">
             <a-icon type="history" />播放历史
         </a-menu-item>
-        <a-menu-item :key="5">
+        <a-menu-item :key="5" v-show="false">
+<!--          暂不支持-->
             <a-icon type="menu" />试听列表
         </a-menu-item>
       </a-sub-menu>
