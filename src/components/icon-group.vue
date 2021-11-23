@@ -1,7 +1,7 @@
 <template>
     <div class="icon-group-wrapper">
       <div class="icon-group" ref="iconGroup">
-        <a-icon class="blue-hover" v-show="showIcon.includes('play')" @click="play()" type="play-circle" title="下载"/>
+        <a-icon class="blue-hover" v-show="showIcon.includes('play')" @click="play()" type="play-circle" title="播放"/>
         <a-icon class="blue-hover" v-show="showIcon.includes('download')" @click="download()" type="download" title="下载"/>
         <a-icon class="blue-hover" v-show="showIcon.includes('deleteFromList')" @click="remove()" type="delete" title="从播放列表删除" />
         <a-icon class="blue-hover" v-show="showIcon.includes('comment')" @click="comment()" type="message" title="评论" />

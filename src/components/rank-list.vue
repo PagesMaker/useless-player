@@ -131,7 +131,7 @@
     margin-top: 30px;
     .favorite-list-box{
       width: 98%;
-      @include flex(row, space-between, center);
+      @include flex(row, flex-start, center);
       flex-wrap: wrap;
       .box-wrapper{
         width: 10%;

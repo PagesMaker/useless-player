@@ -355,7 +355,7 @@
     @include flex(column, flex-start, center);
     .carousel{
       width: 98%;
-      /deep/ .ant-carousel{
+      .ant-carousel{
         width: $max;
         .slick-slide {
           text-align: center;
