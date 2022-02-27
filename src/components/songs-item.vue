@@ -140,17 +140,13 @@
     @include flex(column, flex-start, flex-start);
   }
   .list-link{
-    @include flex(column, space-between, flex-start);
+
   }
   .list-link{
     width: 100%;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    word-break: break-all; /* 追加这一行代码 */
     .rank-index{
       display: inline-block;
       width: 18px;
