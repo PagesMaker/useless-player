@@ -6,6 +6,7 @@
 
 ### 界面仿照QQ音乐，目前实现的功能有登录，首页，个人歌单的CRUD，搜索歌曲，歌曲详情，歌曲播放，歌词进度（即歌词颜色渐变），其余还在制作中
 ![image](https://user-images.githubusercontent.com/34165569/178401512-6aee4934-8242-46b2-b7d0-bc7cc7bdd145.png)
+![image](https://user-images.githubusercontent.com/34165569/178401894-db0f0cd5-99c9-409b-82ab-373f91347fa0.png)
 
 ### 技术栈：
 1. vue2
